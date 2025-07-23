@@ -5,17 +5,17 @@ import next from "next";
 import { Server } from "socket.io";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
+import "dotenv/config";
 
+// --- Server Setup ---
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "0.0.0.0";
 const port = 3000;
-
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-// --- Persistence Setup ---
-const historyFilePath = path.join(process.cwd(), "history.json");
-
+// --- Interfaces ---
 interface QrScan {
     id: string;
     data: string;
@@ -23,8 +23,15 @@ interface QrScan {
     validatedAt: string;
     status: "Valid" | "Not Valid";
 }
+interface User {
+    id: number;
+    name: string;
+    authorizeLevel: 0 | 1 | 2;
+}
 
-// Function to read history from the file
+// --- Persistence ---
+const historyFilePath = path.join(process.cwd(), "history.json");
+
 const readHistoryFromFile = (): QrScan[] => {
     try {
         if (fs.existsSync(historyFilePath)) {
@@ -34,10 +41,9 @@ const readHistoryFromFile = (): QrScan[] => {
     } catch (error) {
         console.error("Error reading history file:", error);
     }
-    return []; // Return empty array if file doesn't exist or has errors
+    return [];
 };
 
-// Function to write history to the file
 const writeHistoryToFile = (history: QrScan[]) => {
     try {
         fs.writeFileSync(historyFilePath, JSON.stringify(history, null, 2));
@@ -46,10 +52,43 @@ const writeHistoryToFile = (history: QrScan[]) => {
     }
 };
 
-// Load initial history from file
 let scanHistory: QrScan[] = readHistoryFromFile();
-// --- End Persistence Setup ---
 
+// --- Authentication ---
+const authorizedUsersPath = path.join(process.cwd(), "authorized-users.json");
+const authorizedTokens: string[] = JSON.parse(
+    fs.readFileSync(authorizedUsersPath, "utf-8"),
+);
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+
+if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
+    throw new Error("Encryption key is invalid. Check .env file.");
+}
+const key = Buffer.from(ENCRYPTION_KEY, "utf-8");
+
+function decrypt(token: string): User | null {
+    try {
+        const [ivHex, authTagHex, encryptedHex] = token.split(":");
+        if (!ivHex || !authTagHex || !encryptedHex) return null;
+
+        const iv = Buffer.from(ivHex, "hex");
+        const authTag = Buffer.from(authTagHex, "hex");
+        const encrypted = Buffer.from(encryptedHex, "hex");
+
+        const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+        decipher.setAuthTag(authTag);
+        const decrypted = Buffer.concat([
+            decipher.update(encrypted),
+            decipher.final(),
+        ]);
+        return JSON.parse(decrypted.toString("utf8"));
+    } catch (error) {
+        console.error("Decryption failed:", error);
+        return null;
+    }
+}
+
+// --- Main App ---
 app.prepare().then(() => {
     const httpServer = createServer((req, res) => {
         try {
@@ -73,64 +112,81 @@ app.prepare().then(() => {
     io.on("connection", (socket) => {
         console.log("✅ Client connected:", socket.id);
 
-        // Send the current history to the newly connected client
-        socket.emit("history-update", scanHistory);
+        socket.on("authenticate", (token: string, callback) => {
+            if (authorizedTokens.includes(token)) {
+                const user = decrypt(token);
+                if (user) {
+                    console.log(
+                        `✅ Auth success for ${user.name} (Level ${user.authorizeLevel})`,
+                    );
+                    socket.data.user = user;
+                    callback({ success: true, user });
+                    socket.emit("history-update", scanHistory);
+                    return;
+                }
+            }
+            console.log(
+                `❌ Auth failed for token: ${token.substring(0, 20)}...`,
+            );
+            callback({ success: false, message: "Invalid token." });
+        });
 
         socket.on(
             "validation-submit",
-            (data: {
-                qrData: string;
-                status: "Valid" | "Not Valid";
-                validatorName: string;
-            }) => {
-                console.log("📝 Validation Submitted:", data);
+            (data: { qrData: string; status: "Valid" | "Not Valid" }) => {
+                const user: User | undefined = socket.data.user;
+                if (!user || user.authorizeLevel < 1) {
+                    console.log(
+                        `🚫 Unauthorized validation attempt by user:`,
+                        user,
+                    );
+                    return;
+                }
+
+                const isDuplicate = scanHistory.some(
+                    (entry) => entry.data === data.qrData,
+                );
+                if (isDuplicate) return;
+
                 const newScan: QrScan = {
                     id: `scan_${Date.now()}`,
                     data: data.qrData,
                     status: data.status,
-                    validatorName: data.validatorName,
+                    validatorName: user.name,
                     validatedAt: new Date().toISOString(),
                 };
-
                 scanHistory.unshift(newScan);
-                writeHistoryToFile(scanHistory); // Persist changes
-                io.emit("history-update", scanHistory); // Broadcast to all clients
-                console.log("📢 Broadcasted history-update after validation.");
+                writeHistoryToFile(scanHistory);
+                io.emit("history-update", scanHistory);
             },
         );
 
-        // --- NEW: Handle Delete Event ---
         socket.on("delete-entry", (idToDelete: string) => {
-            console.log(`🗑️ Received request to delete entry: ${idToDelete}`);
+            const user: User | undefined = socket.data.user;
+            if (!user || user.authorizeLevel < 2) {
+                console.log(`🚫 Unauthorized delete attempt by user:`, user);
+                return;
+            }
+
             const initialLength = scanHistory.length;
             scanHistory = scanHistory.filter(
                 (entry) => entry.id !== idToDelete,
             );
-
             if (scanHistory.length < initialLength) {
-                writeHistoryToFile(scanHistory); // Persist changes
-                io.emit("history-update", scanHistory); // Broadcast the updated list
-                console.log(
-                    `📢 Broadcasted history-update after deleting ${idToDelete}.`,
-                );
+                writeHistoryToFile(scanHistory);
+                io.emit("history-update", scanHistory);
             }
         });
-        // --- End Delete Event Handler ---
 
         socket.on("disconnect", () => {
             console.log("❌ Client disconnected:", socket.id);
         });
     });
 
-    httpServer
-        .once("error", (err) => {
-            console.error(err);
-            process.exit(1);
-        })
-        .listen(port, hostname, () => {
-            console.log(
-                `> Server listening on all interfaces at http://<your-ip-address>:${port}`,
-            );
-            console.log(`> History is being persisted to: ${historyFilePath}`);
-        });
+    httpServer.listen(port, hostname, () => {
+        console.log(
+            `> Server listening on all interfaces at http://<your-ip-address>:${port}`,
+        );
+        console.log(`> History is being persisted to: ${historyFilePath}`);
+    });
 });

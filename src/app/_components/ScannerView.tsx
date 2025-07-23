@@ -1,4 +1,3 @@
-// File: app/_components/ScannerView.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -6,29 +5,35 @@ import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
 import { Socket } from "socket.io-client";
 import { Button } from "~/components/ui/button";
 import ValidationDialog from "./ValidationDialog";
-import { Camera, StopCircle } from "lucide-react";
+import { Camera, StopCircle, ShieldAlert } from "lucide-react";
 import { type ScanEntry } from "./HistoryView";
 import { Badge } from "~/components/ui/badge";
 
+interface User {
+    id: number;
+    name: string;
+    authorizeLevel: 0 | 1 | 2;
+}
 interface ScannerViewProps {
     socket: Socket | null;
     history: ScanEntry[];
+    user: User;
 }
 
 const qrReaderId = "qr-reader";
 
-const ScannerView = ({ socket, history }: ScannerViewProps) => {
+const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
     const scannerRef = useRef<Html5Qrcode | null>(null);
-    // This ref will hold the latest history and solve the stale closure problem.
     const historyRef = useRef<ScanEntry[]>(history);
-
     const [isScanning, setIsScanning] = useState(false);
     const [validationCandidate, setValidationCandidate] = useState<
         string | null
     >(null);
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
-    // FIX: This useEffect keeps the historyRef updated with the latest history prop.
+    // This check is now the main gatekeeper for this component's functionality
+    const canScan = user.authorizeLevel >= 1;
+
     useEffect(() => {
         historyRef.current = history;
     }, [history]);
@@ -118,19 +123,30 @@ const ScannerView = ({ socket, history }: ScannerViewProps) => {
         setValidationCandidate(null);
     };
 
+    // If the user somehow gets to this view without permission, show a clear message.
+    if (!canScan) {
+        return (
+            <div className="flex h-48 flex-col items-center justify-center text-center">
+                <ShieldAlert className="mb-4 h-12 w-12 text-yellow-500" />
+                <p className="font-semibold">Access Denied</p>
+                <p className="text-sm text-gray-500">
+                    You do not have permission to use the scanner.
+                </p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col items-center gap-4">
             <div
                 id={qrReaderId}
                 className="aspect-square w-full max-w-sm overflow-hidden rounded-lg border-2 border-dashed bg-gray-200 dark:bg-gray-800"
             ></div>
-
             <div className="h-6">
                 {lastMessage && (
                     <Badge variant="secondary">{lastMessage}</Badge>
                 )}
             </div>
-
             {!isScanning ? (
                 <Button
                     onClick={() => {
@@ -155,7 +171,6 @@ const ScannerView = ({ socket, history }: ScannerViewProps) => {
                     <StopCircle className="mr-2 h-5 w-5" /> Stop Scanning
                 </Button>
             )}
-
             <ValidationDialog
                 isOpen={!!validationCandidate}
                 qrData={validationCandidate}

@@ -47,3 +47,6 @@ yarn-error.log*
 
 # History entries created by server
 history.json
+
+# List of authorized users
+authorized-users.json

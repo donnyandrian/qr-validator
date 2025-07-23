@@ -1,4 +1,3 @@
-// File: app/_components/HistoryView.tsx
 "use client";
 
 import {
@@ -21,16 +20,22 @@ export interface ScanEntry {
     validatedAt: string;
     status: "Valid" | "Not Valid";
 }
-
+interface User {
+    id: number;
+    name: string;
+    authorizeLevel: 0 | 1 | 2;
+}
 interface HistoryViewProps {
     history: ScanEntry[];
-    socket: Socket | null; // Add socket prop
+    socket: Socket | null;
+    user: User;
 }
 
-const HistoryView = ({ history, socket }: HistoryViewProps) => {
+const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
+    const canDelete = user.authorizeLevel >= 2;
+
     const handleDelete = (id: string) => {
-        if (socket) {
-            // Send the delete event to the server
+        if (socket && canDelete) {
             socket.emit("delete-entry", id);
         }
     };
@@ -44,7 +49,12 @@ const HistoryView = ({ history, socket }: HistoryViewProps) => {
                         <TableHead>Validator</TableHead>
                         <TableHead>Validated At</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        {/* Only render the Actions column header if the user can delete */}
+                        {canDelete && (
+                            <TableHead className="text-right">
+                                Actions
+                            </TableHead>
+                        )}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -71,21 +81,29 @@ const HistoryView = ({ history, socket }: HistoryViewProps) => {
                                         {scan.status}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="text-right">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleDelete(scan.id)}
-                                        aria-label="Delete entry"
-                                    >
-                                        <Trash2 className="h-4 w-4 text-red-500" />
-                                    </Button>
-                                </TableCell>
+                                {/* Only render the delete button cell if the user can delete */}
+                                {canDelete && (
+                                    <TableCell className="text-right">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() =>
+                                                handleDelete(scan.id)
+                                            }
+                                            aria-label="Delete entry"
+                                        >
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                        </Button>
+                                    </TableCell>
+                                )}
                             </TableRow>
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={5} className="h-24 text-center">
+                            <TableCell
+                                colSpan={canDelete ? 5 : 4}
+                                className="h-24 text-center"
+                            >
                                 No scans yet.
                             </TableCell>
                         </TableRow>
