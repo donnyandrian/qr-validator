@@ -1,4 +1,3 @@
-// File: app/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,12 +9,7 @@ import HistoryView, { type ScanEntry } from "./_components/HistoryView";
 import AuthView from "./_components/AuthView";
 import { Button } from "~/components/ui/button";
 import { LogOut, Loader2 } from "lucide-react";
-
-interface User {
-    id: number;
-    name: string;
-    authorizeLevel: 0 | 1 | 2;
-}
+import type { User } from "~/types";
 
 const AUTH_TOKEN_KEY = "qr-validator-auth-token";
 
@@ -23,7 +17,6 @@ export default function HomePage() {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [history, setHistory] = useState<ScanEntry[]>([]);
     const [user, setUser] = useState<User | null>(null);
-    // Add a loading state to handle auto-authentication
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -39,7 +32,6 @@ export default function HomePage() {
         newSocket.on("connect", () => {
             console.log("✅ Connected to server");
 
-            // --- Auto-authentication Logic ---
             const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
             if (storedToken) {
                 console.log(
@@ -56,11 +48,11 @@ export default function HomePage() {
                             console.log("Stored token is invalid. Clearing...");
                             localStorage.removeItem(AUTH_TOKEN_KEY);
                         }
-                        setIsLoading(false); // Stop loading after attempt
+                        setIsLoading(false); 
                     },
                 );
             } else {
-                setIsLoading(false); // Stop loading if no token is found
+                setIsLoading(false); 
             }
         });
 
@@ -87,7 +79,6 @@ export default function HomePage() {
         window.location.reload();
     };
 
-    // Show a loading spinner during the initial auth check
     if (isLoading) {
         return (
             <div className="flex min-h-screen items-center justify-center">

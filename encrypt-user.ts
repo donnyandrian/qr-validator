@@ -1,7 +1,6 @@
-// File: encrypt-user.ts
 // Run this script with: bun run encrypt-user.ts
 import crypto from "crypto";
-import "dotenv/config"; // To load the .env file
+import "dotenv/config";
 
 interface UserPayload {
     id: number;
@@ -28,7 +27,7 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
 }
 
 const key = Buffer.from(ENCRYPTION_KEY, "utf-8");
-const iv = crypto.randomBytes(16); // Generate a random IV for each encryption
+const iv = crypto.randomBytes(16);
 
 function encrypt(payload: UserPayload): string {
     const text = JSON.stringify(payload);
@@ -38,7 +37,6 @@ function encrypt(payload: UserPayload): string {
         cipher.final(),
     ]);
     const authTag = cipher.getAuthTag();
-    // We combine iv, authTag, and encrypted data into a single string for storage/transport.
     return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted.toString("hex")}`;
 }
 

@@ -8,12 +8,8 @@ import ValidationDialog from "./ValidationDialog";
 import { Camera, StopCircle, ShieldAlert } from "lucide-react";
 import { type ScanEntry } from "./HistoryView";
 import { Badge } from "~/components/ui/badge";
+import type { User } from "~/types";
 
-interface User {
-    id: number;
-    name: string;
-    authorizeLevel: 0 | 1 | 2;
-}
 interface ScannerViewProps {
     socket: Socket | null;
     history: ScanEntry[];
@@ -31,7 +27,6 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
     >(null);
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
-    // This check is now the main gatekeeper for this component's functionality
     const canScan = user.authorizeLevel >= 1;
 
     useEffect(() => {
@@ -53,7 +48,6 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
         const qrCodeSuccessCallback = (decodedText: string) => {
             if (validationCandidate) return;
 
-            // FIX: Check for duplicates using the always-current historyRef.
             const isDuplicate = historyRef.current.some(
                 (entry) => entry.data === decodedText,
             );
@@ -71,7 +65,7 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
                 { facingMode: "environment" },
                 { fps: 5, qrbox: { width: 250, height: 250 } },
                 qrCodeSuccessCallback,
-                (errorMessage) => {
+                (_) => {
                     /* ignore errors */
                 },
             );
@@ -123,7 +117,6 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
         setValidationCandidate(null);
     };
 
-    // If the user somehow gets to this view without permission, show a clear message.
     if (!canScan) {
         return (
             <div className="flex h-48 flex-col items-center justify-center text-center">

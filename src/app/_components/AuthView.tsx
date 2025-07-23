@@ -1,4 +1,3 @@
-// File: app/_components/AuthView.tsx
 "use client";
 
 import { useState, useRef, ChangeEvent } from "react";
@@ -14,12 +13,7 @@ import {
     CardTitle,
 } from "~/components/ui/card";
 import { Upload } from "lucide-react";
-
-interface User {
-    id: number;
-    name: string;
-    authorizeLevel: 0 | 1 | 2;
-}
+import type { User } from "~/types";
 
 interface AuthViewProps {
     socket: Socket | null;
@@ -32,9 +26,7 @@ const authQrReaderId = "auth-qr-reader";
 const AuthView = ({ socket, onAuthSuccess }: AuthViewProps) => {
     const [token, setToken] = useState("");
     const [error, setError] = useState("");
-    // useRef to hold the scanner instance.
     const scannerRef = useRef<Html5Qrcode | null>(null);
-    // useRef to link the button to the hidden file input.
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const attemptAuth = (authToken: string) => {
@@ -55,23 +47,16 @@ const AuthView = ({ socket, onAuthSuccess }: AuthViewProps) => {
 
     const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (!file) {
-            return;
-        }
+        if (!file) return;
 
-        // Lazy-initialize the scanner instance if it doesn't exist
         if (!scannerRef.current) {
-            // The first argument (elementId) is required, so we provide our hidden div's ID.
             scannerRef.current = new Html5Qrcode(authQrReaderId, {
                 verbose: false,
             });
         }
 
         try {
-            const decodedText = await scannerRef.current.scanFile(
-                file,
-                /* showImage= */ false,
-            );
+            const decodedText = await scannerRef.current.scanFile(file, false);
             setToken(decodedText);
             attemptAuth(decodedText);
         } catch (err) {
@@ -79,7 +64,6 @@ const AuthView = ({ socket, onAuthSuccess }: AuthViewProps) => {
             setError("Could not read QR code from the selected file.");
         }
 
-        // Reset the file input so the same file can be selected again if needed
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -88,7 +72,7 @@ const AuthView = ({ socket, onAuthSuccess }: AuthViewProps) => {
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4 dark:bg-gray-900">
             {/* This div is required by Html5Qrcode for its internal operations, even if not visible. */}
-            <div id={authQrReaderId} style={{ display: "none" }}></div>
+            <div id={authQrReaderId} className="hidden"/>
 
             <Card className="w-full max-w-md">
                 <CardHeader>
@@ -128,7 +112,6 @@ const AuthView = ({ socket, onAuthSuccess }: AuthViewProps) => {
                     </div>
 
                     <div>
-                        {/* Hidden file input */}
                         <input
                             type="file"
                             ref={fileInputRef}
@@ -136,7 +119,6 @@ const AuthView = ({ socket, onAuthSuccess }: AuthViewProps) => {
                             accept="image/*"
                             className="hidden"
                         />
-                        {/* Button that triggers the file input */}
                         <Button
                             onClick={() => fileInputRef.current?.click()}
                             variant="outline"
