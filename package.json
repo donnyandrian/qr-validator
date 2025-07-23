@@ -6,13 +6,14 @@
   "scripts": {
     "build": "next build",
     "check": "next lint && tsc --noEmit",
-    "dev": "next dev --turbo",
+    "dev": "bun run server.ts",
+    "postinstall": "next telemetry disable",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "preview": "next build && next start",
-    "start": "next start",
+    "start": "NODE_ENV=production bun run server.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
