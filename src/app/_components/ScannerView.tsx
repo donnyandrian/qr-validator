@@ -48,16 +48,28 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
         const qrCodeSuccessCallback = (decodedText: string) => {
             if (validationCandidate) return;
 
-            const isDuplicate = historyRef.current.some(
-                (entry) => entry.data === decodedText,
-            );
-            if (isDuplicate) {
-                setLastMessage(`Skipped: Already in history.`);
-                return;
-            }
+            socket?.emit(
+                "userdata-decryption",
+                decodedText,
+                (response: { success: boolean; message: string }) => {
+                    const result = response.message;
+                    if (!response.success) {
+                        setLastMessage(result);
+                        return;
+                    }
 
-            setLastMessage(`Found: ${decodedText.substring(0, 30)}...`);
-            setValidationCandidate(decodedText);
+                    const isDuplicate = historyRef.current.some(
+                        (entry) => entry.data === result,
+                    );
+                    if (isDuplicate) {
+                        setLastMessage(`Skipped: Already in history.`);
+                        return;
+                    }
+
+                    setLastMessage(`Found: ${result.substring(0, 30)}...`);
+                    setValidationCandidate(result);
+                },
+            );
         };
 
         try {

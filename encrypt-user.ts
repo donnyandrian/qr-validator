@@ -37,7 +37,9 @@ function encrypt(payload: UserPayload): string {
         cipher.final(),
     ]);
     const authTag = cipher.getAuthTag();
-    return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted.toString("hex")}`;
+    const combined = Buffer.concat([iv, authTag, encrypted]);
+
+    return combined.toString("base64");
 }
 
 console.log("--- Generated Encrypted User Tokens ---");

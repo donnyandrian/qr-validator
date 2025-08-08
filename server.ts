@@ -64,23 +64,26 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
     throw new Error("Encryption key is invalid. Check .env file.");
 }
 const key = Buffer.from(ENCRYPTION_KEY, "utf-8");
+const userdataKey = Buffer.from(process.env.USERDATA_ENCRYPTION_KEY!, "utf-8");
 
-function decrypt(token: string): User | null {
+function decrypt(token: string, _key: Buffer): string | null {
     try {
-        const [ivHex, authTagHex, encryptedHex] = token.split(":");
-        if (!ivHex || !authTagHex || !encryptedHex) return null;
+        const combined = Buffer.from(token, "base64");
 
-        const iv = Buffer.from(ivHex, "hex");
-        const authTag = Buffer.from(authTagHex, "hex");
-        const encrypted = Buffer.from(encryptedHex, "hex");
+        // Extract the iv, authTag, and encrypted data from the combined buffer
+        const iv = combined.subarray(0, 16);
+        const authTag = combined.subarray(16, 32);
+        const encrypted = combined.subarray(32);
 
-        const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+        if (!iv || !authTag || !encrypted) return null;
+
+        const decipher = crypto.createDecipheriv("aes-256-gcm", _key, iv);
         decipher.setAuthTag(authTag);
         const decrypted = Buffer.concat([
             decipher.update(encrypted),
             decipher.final(),
         ]);
-        return JSON.parse(decrypted.toString("utf8"));
+        return decrypted.toString("utf8");
     } catch (error) {
         console.error("Decryption failed:", error);
         return null;
@@ -113,8 +116,9 @@ app.prepare().then(() => {
 
         socket.on("authenticate", (token: string, callback) => {
             if (authorizedTokens.includes(token)) {
-                const user = decrypt(token);
-                if (user) {
+                const decrypted = decrypt(token, key);
+                if (decrypted) {
+                    const user = JSON.parse(decrypted) as User;
                     console.log(
                         `✅ Auth success for ${user.name} (Level ${user.authorizeLevel})`,
                     );
@@ -128,6 +132,14 @@ app.prepare().then(() => {
                 `❌ Auth failed for token: ${token.substring(0, 20)}...`,
             );
             callback({ success: false, message: "Invalid token." });
+        });
+
+        socket.on("userdata-decryption", (data: string, callback) => {
+            const decrypted = decrypt(data, userdataKey);
+            if (!decrypted) {
+                callback({ success: false, message: "Decryption failed." });
+            }
+            callback({ success: true, message: decrypted });
         });
 
         socket.on(
