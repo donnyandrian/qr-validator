@@ -6,6 +6,7 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import "dotenv/config";
+import { validate } from "~/lib/validation";
 
 // --- Server Setup ---
 const dev = process.env.NODE_ENV !== "production";
@@ -138,8 +139,23 @@ app.prepare().then(() => {
             const decrypted = decrypt(data, userdataKey);
             if (!decrypted) {
                 callback({ success: false, message: "Decryption failed." });
+                return;
             }
-            callback({ success: true, message: decrypted });
+
+            const schemaValidation = validate(decrypted);
+            if (!schemaValidation.success) {
+                callback({
+                    success: false,
+                    message: schemaValidation.error.message,
+                });
+                return;
+            }
+
+            callback({
+                success: true,
+                message: decrypted,
+                data: schemaValidation.value,
+            });
         });
 
         socket.on(

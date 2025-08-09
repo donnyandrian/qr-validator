@@ -9,10 +9,11 @@ import {
     DialogFooter,
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
+import { ValidationType } from "~/lib/validation";
 
 interface ValidationDialogProps {
     isOpen: boolean;
-    qrData: string | null;
+    qrData: ValidationType | null;
     onClose: () => void;
     onSubmit: (status: "Valid" | "Not Valid") => void;
 }
@@ -37,9 +38,13 @@ const ValidationDialog = ({
                 <div className="grid gap-4 py-4">
                     <div className="flex flex-col items-start gap-2">
                         <span className="font-semibold">Scanned Data:</span>
-                        <p className="w-full rounded-md bg-gray-100 p-3 text-sm break-words text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                            {qrData}
-                        </p>
+                        <div className="contents">
+                            {Object.entries(qrData).map(([key, value]) => (
+                                <p key={key} className="w-full rounded-md bg-gray-100 p-3 text-sm break-words text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                    {value}
+                                </p>
+                            ))}
+                        </div>
                     </div>
                 </div>
                 <DialogFooter>

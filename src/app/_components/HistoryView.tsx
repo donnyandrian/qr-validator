@@ -77,7 +77,7 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
                 value={searchTerm}
                 onChange={(e) => {
                     setSearchTerm(e.target.value);
-                    setCurrentPage(1); 
+                    setCurrentPage(1);
                 }}
                 className="max-w-sm"
             />
@@ -101,8 +101,8 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
                         {paginatedHistory.length > 0 ? (
                             paginatedHistory.map((scan) => (
                                 <TableRow key={scan.id}>
-                                    <TableCell className="max-w-[200px] truncate font-medium sm:max-w-xs">
-                                        {scan.data}
+                                    <TableCell className="max-w-[200px] truncate font-medium whitespace-pre-line sm:max-w-xs">
+                                        {prettyJsonData(scan.data)}
                                     </TableCell>
                                     <TableCell>{scan.validatorName}</TableCell>
                                     <TableCell>
@@ -179,6 +179,11 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
             </div>
         </div>
     );
+};
+
+const prettyJsonData = (json: string) => {
+    const entries = Object.entries(JSON.parse(json));
+    return entries.map(([key, value]) => `${key}: ${value}`).join("\n");
 };
 
 export default HistoryView;
