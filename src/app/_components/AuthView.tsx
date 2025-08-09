@@ -2,7 +2,7 @@
 
 import { useState, useRef, ChangeEvent } from "react";
 import { Socket } from "socket.io-client";
-import { Html5Qrcode } from "html5-qrcode";
+import { decodeQR } from "qr/decode";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -20,13 +20,30 @@ interface AuthViewProps {
     onAuthSuccess: (user: User, token: string) => void;
 }
 
-// This ID is still required for the library to initialize, even if not visible.
-const authQrReaderId = "auth-qr-reader";
+const fileToImageData = async (file: File) => {
+    // Create an ImageBitmap from the file
+    const imageBitmap = await createImageBitmap(file);
+
+    // Create a canvas
+    const canvas = document.createElement("canvas");
+    canvas.width = imageBitmap.width;
+    canvas.height = imageBitmap.height;
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+        throw new Error("Failed to get canvas context");
+    }
+
+    // Draw the ImageBitmap onto the canvas
+    ctx.drawImage(imageBitmap, 0, 0);
+
+    // Get the ImageData from the canvas
+    return ctx.getImageData(0, 0, imageBitmap.width, imageBitmap.height);
+};
 
 const AuthView = ({ socket, onAuthSuccess }: AuthViewProps) => {
     const [token, setToken] = useState("");
     const [error, setError] = useState("");
-    const scannerRef = useRef<Html5Qrcode | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const attemptAuth = (authToken: string) => {
@@ -49,18 +66,13 @@ const AuthView = ({ socket, onAuthSuccess }: AuthViewProps) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        if (!scannerRef.current) {
-            scannerRef.current = new Html5Qrcode(authQrReaderId, {
-                verbose: false,
-            });
-        }
-
         try {
-            const decodedText = await scannerRef.current.scanFile(file, false);
+            const imageData = await fileToImageData(file);
+            const decodedText = decodeQR(imageData);
             setToken(decodedText);
             attemptAuth(decodedText);
-        } catch (err) {
-            console.error("Error scanning file:", err);
+        } catch (error) {
+            console.log("Error decoding QR code: ", error);
             setError("Could not read QR code from the selected file.");
         }
 
@@ -71,9 +83,6 @@ const AuthView = ({ socket, onAuthSuccess }: AuthViewProps) => {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4 dark:bg-gray-900">
-            {/* This div is required by Html5Qrcode for its internal operations, even if not visible. */}
-            <div id={authQrReaderId} className="hidden"/>
-
             <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle>Authentication Required</CardTitle>

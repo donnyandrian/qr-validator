@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { frontalCamera, QRCanvas } from "qr/dom";
 import { Socket } from "socket.io-client";
 import { Button } from "~/components/ui/button";
 import ValidationDialog from "./ValidationDialog";
@@ -9,6 +9,7 @@ import { Camera, StopCircle, ShieldAlert } from "lucide-react";
 import { type ScanEntry } from "./HistoryView";
 import { Badge } from "~/components/ui/badge";
 import type { User } from "~/types";
+import { ValidationType } from "~/lib/validation";
 
 interface ScannerViewProps {
     socket: Socket | null;
@@ -16,15 +17,19 @@ interface ScannerViewProps {
     user: User;
 }
 
-const qrReaderId = "qr-reader";
-
 const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
-    const scannerRef = useRef<Html5Qrcode | null>(null);
     const historyRef = useRef<ScanEntry[]>(history);
+
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const cameraRef = useRef<Awaited<ReturnType<typeof frontalCamera>> | null>(
+        null,
+    );
+    const canvasRef = useRef<QRCanvas | null>(null);
+
+    // --- State remains largely the same ---
     const [isScanning, setIsScanning] = useState(false);
-    const [validationCandidate, setValidationCandidate] = useState<
-        string | null
-    >(null);
+    const [validationCandidate, setValidationCandidate] =
+        useState<ValidationType | null>(null);
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
     const canScan = user.authorizeLevel >= 1;
@@ -33,25 +38,34 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
         historyRef.current = history;
     }, [history]);
 
-    const startScanner = async () => {
-        if (!scannerRef.current) {
-            scannerRef.current = new Html5Qrcode(qrReaderId, {
-                verbose: false,
-            });
-        }
-        const scanner = scannerRef.current;
+    // The core scanning function, runs in a loop via requestAnimationFrame
+    const scanFrame = useCallback(() => {
+        // Stop the loop if the component is no longer in a scanning state
+        if (!isScanning || validationCandidate) return;
 
-        if (scanner.getState() === Html5QrcodeScannerState.SCANNING) {
+        if (
+            !videoRef.current ||
+            !cameraRef.current ||
+            !canvasRef.current ||
+            videoRef.current.paused
+        ) {
             return;
         }
 
-        const qrCodeSuccessCallback = (decodedText: string) => {
-            if (validationCandidate) return;
+        const frame = cameraRef.current.readFrame(canvasRef.current, true);
 
+        if (frame) {
+            videoRef.current.pause(); // Pause video to "freeze" on the scanned code
+            // QR code found!
+            console.log("QR code scanned:", frame);
             socket?.emit(
                 "userdata-decryption",
-                decodedText,
-                (response: { success: boolean; message: string }) => {
+                frame,
+                (response: {
+                    success: boolean;
+                    message: string;
+                    data?: ValidationType;
+                }) => {
                     const result = response.message;
                     if (!response.success) {
                         setLastMessage(result);
@@ -63,65 +77,89 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
                     );
                     if (isDuplicate) {
                         setLastMessage(`Skipped: Already in history.`);
+                        videoRef.current
+                            ?.play()
+                            .then(() => requestAnimationFrame(scanFrame));
                         return;
                     }
 
                     setLastMessage(`Found: ${result.substring(0, 30)}...`);
-                    setValidationCandidate(result);
+                    setValidationCandidate(response.data!);
                 },
             );
-        };
+        } else {
+            setLastMessage("Scanner active...");
+            // No code found, request the next animation frame to continue
+            requestAnimationFrame(scanFrame);
+        }
+    }, [isScanning, validationCandidate]);
+
+    const startScanner = async () => {
+        if (!navigator.mediaDevices?.getUserMedia) {
+            setLastMessage("Error: Camera not supported.");
+            setIsScanning(false);
+            return;
+        }
 
         try {
-            await scanner.start(
-                { facingMode: "environment" },
-                { fps: 5, qrbox: { width: 250, height: 250 } },
-                qrCodeSuccessCallback,
-                (_) => {
-                    /* ignore errors */
-                },
-            );
-            setLastMessage("Scanner active...");
+            if (videoRef.current) {
+                canvasRef.current = new QRCanvas();
+                cameraRef.current = await frontalCamera(videoRef.current);
+
+                await videoRef.current.play();
+                setLastMessage("Scanner active...");
+                requestAnimationFrame(scanFrame); // Start the scanning loop
+            }
         } catch (err) {
             console.error("Failed to start scanner:", err);
-            setLastMessage("Error: Could not start camera.");
-            setIsScanning(false);
+            let message = "Error: Could not start camera.";
+            if (err instanceof Error && err.name === "NotAllowedError") {
+                message = "Error: Camera permission denied.";
+            }
+            setLastMessage(message);
+            setIsScanning(false); // Revert state on error
         }
     };
 
-    const stopScanner = async () => {
-        if (scannerRef.current && scannerRef.current.isScanning) {
-            try {
-                await scannerRef.current.stop();
-                setLastMessage("Scanner stopped.");
-            } catch (err) {
-                console.error("Failed to stop scanner:", err);
-            }
+    const stopScanner = useCallback(() => {
+        setLastMessage("Scanner stopped.");
+        if (cameraRef.current) {
+            cameraRef.current.stop();
+            cameraRef.current = null;
         }
-    };
+
+        if (canvasRef.current) {
+            canvasRef.current.clear();
+            canvasRef.current = null;
+        }
+
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+    }, []);
 
     useEffect(() => {
-        const scanner = scannerRef.current;
-        if (!scanner) return;
-
-        if (
-            validationCandidate &&
-            scanner.getState() === Html5QrcodeScannerState.SCANNING
-        ) {
-            scanner.pause(true);
-        } else if (
-            !validationCandidate &&
-            isScanning &&
-            scanner.getState() === Html5QrcodeScannerState.PAUSED
-        ) {
-            scanner.resume();
+        if (isScanning && !validationCandidate && videoRef.current?.paused) {
+            videoRef.current
+                .play()
+                .then(() => {
+                    requestAnimationFrame(scanFrame);
+                })
+                .catch((err) => {
+                    console.error("Failed to resume video:", err);
+                    setLastMessage("Error: Could not resume scanner.");
+                });
         }
-    }, [validationCandidate, isScanning]);
+    }, [isScanning, validationCandidate, scanFrame]);
+
+    useEffect(() => {
+        return () => stopScanner();
+    }, [stopScanner]);
 
     const handleValidationSubmit = (status: "Valid" | "Not Valid") => {
         if (socket && validationCandidate) {
             socket.emit("validation-submit", {
-                qrData: validationCandidate,
+                qrData: JSON.stringify(validationCandidate),
                 status,
                 validatorName: "Admin",
             });
@@ -143,10 +181,13 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
 
     return (
         <div className="flex flex-col items-center gap-4">
-            <div
-                id={qrReaderId}
-                className="aspect-square w-full max-w-sm overflow-hidden rounded-lg border-2 border-dashed bg-gray-200 dark:bg-gray-800"
-            ></div>
+            <div className="flex aspect-square w-full max-w-sm items-center justify-center overflow-hidden rounded-lg border-2 border-dashed bg-gray-200 dark:bg-gray-800">
+                <video
+                    ref={videoRef}
+                    playsInline // Crucial for inline playback on mobile browsers
+                    className="h-full w-full object-cover"
+                />
+            </div>
             <div className="h-6">
                 {lastMessage && (
                     <Badge variant="secondary">{lastMessage}</Badge>
