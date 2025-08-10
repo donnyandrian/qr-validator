@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { frontalCamera, QRCanvas } from "qr/dom";
-import { Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 import { Button } from "~/components/ui/button";
 import ValidationDialog from "./ValidationDialog";
 import { Camera, StopCircle, ShieldAlert } from "lucide-react";
 import { type ScanEntry } from "./HistoryView";
 import { Badge } from "~/components/ui/badge";
 import type { User } from "~/types";
-import { ValidationType } from "~/lib/validation";
+import type { ValidationType } from "~/lib/validation";
 
 interface ScannerViewProps {
     socket: Socket | null;
@@ -69,6 +69,7 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
                     const result = response.message;
                     if (!response.success) {
                         setLastMessage(result);
+                        requestAnimationFrame(scanFrame);
                         return;
                     }
 
@@ -77,9 +78,10 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
                     );
                     if (isDuplicate) {
                         setLastMessage(`Skipped: Already in history.`);
-                        videoRef.current
-                            ?.play()
-                            .then(() => requestAnimationFrame(scanFrame));
+                        videoRef.current?.play().then(
+                            () => requestAnimationFrame(scanFrame),
+                            (_) => {/* Ignore */},
+                        );
                         return;
                     }
 
@@ -92,7 +94,7 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
             // No code found, request the next animation frame to continue
             requestAnimationFrame(scanFrame);
         }
-    }, [isScanning, validationCandidate]);
+    }, [isScanning, validationCandidate, socket]);
 
     const startScanner = async () => {
         if (!navigator.mediaDevices?.getUserMedia) {
@@ -197,7 +199,7 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
                 <Button
                     onClick={() => {
                         setIsScanning(true);
-                        startScanner();
+                        void startScanner();
                     }}
                     size="lg"
                     className="w-48"

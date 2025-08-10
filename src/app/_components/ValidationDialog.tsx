@@ -9,7 +9,7 @@ import {
     DialogFooter,
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
-import { ValidationType } from "~/lib/validation";
+import type { ValidationType } from "~/lib/validation";
 
 interface ValidationDialogProps {
     isOpen: boolean;

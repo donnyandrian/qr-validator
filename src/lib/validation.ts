@@ -1,4 +1,4 @@
-import { z, ZodError } from "zod";
+import { ZodError } from "zod";
 import { validationSchema } from "~/schemas/validations/orkess4";
 import type { ValidationType } from "~/schemas/validations/orkess4";
 
@@ -9,7 +9,7 @@ type ValidationResult<T> =
 export function validate(value: string): ValidationResult<ValidationType> {
     try {
         // First, parse the JSON string into a JavaScript object.
-        const dataObject = JSON.parse(value);
+        const dataObject = JSON.parse(value) as Record<string, string>;
 
         // Use Zod's .parse() method. If validation fails, it throws an error.
         const validatedData = validationSchema.parse(dataObject);

@@ -13,7 +13,7 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Trash2, ChevronLeft, ChevronRight } from "lucide-react";
-import { Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 
 export interface ScanEntry {
     id: string;
@@ -182,7 +182,7 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
 };
 
 const prettyJsonData = (json: string) => {
-    const entries = Object.entries(JSON.parse(json));
+    const entries = Object.entries(JSON.parse(json) as Record<string, string>);
     return entries.map(([key, value]) => `${key}: ${value}`).join("\n");
 };
 

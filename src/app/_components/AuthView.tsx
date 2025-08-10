@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, ChangeEvent } from "react";
-import { Socket } from "socket.io-client";
+import { useState, useRef, type ChangeEvent } from "react";
+import type { Socket } from "socket.io-client";
 import { decodeQR } from "qr/decode";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -56,7 +56,7 @@ const AuthView = ({ socket, onAuthSuccess }: AuthViewProps) => {
                 if (response.success && response.user) {
                     onAuthSuccess(response.user, authToken);
                 } else {
-                    setError(response.message || "Authentication failed.");
+                    setError(response.message ?? "Authentication failed.");
                 }
             },
         );
