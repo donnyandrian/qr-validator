@@ -6,7 +6,7 @@ import { Geist } from "next/font/google";
 export const metadata: Metadata = {
     title: "QR Scanner Validator",
     description: "Simple web app to scan and validate data from QR codes",
-    icons: [{ rel: "icon", url: "/favicon.ico" }],
+    icons: [{ rel: "icon", url: "/favicon.svg" }],
 };
 
 const geist = Geist({
