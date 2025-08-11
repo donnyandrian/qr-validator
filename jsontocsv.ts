@@ -1,38 +1,28 @@
 import fs from "fs";
+import { format } from "@fast-csv/format";
 
-/**
- * Converts an array of objects (JSON) to a CSV string.
- * @param data The array of objects to convert.
- * @returns A CSV formatted string.
- */
-function jsonToCsv(data: any[]): string {
-    if (!data || data.length === 0) {
-        return "";
-    }
-
-    // 1. Extract headers from the keys of the first object
+function jsonToCsv2(data: any[], output: string): void {
     const headers = Object.keys(data[0]);
 
-    // 2. Create the header row
-    const csvRows = [headers.join(",")];
+    const stream = format({ headers });
+    stream.pipe(fs.createWriteStream(output));
 
-    // 3. Create a row for each object in the data
     for (const row of data) {
-        const values = headers.map((header) => {
-            const escaped = ("" + row[header]).replace(/"/g, '""'); // Escape double quotes
-            return `"${escaped}"`; // Wrap all values in double quotes
-        });
-        csvRows.push(values.join(","));
+        stream.write(
+            headers.map((header) =>
+                header !== "validatedAt"
+                    ? row[header]
+                    : new Date(row[header]).toLocaleString(),
+            ),
+        );
     }
 
-    // 4. Join all rows with a newline character
-    return csvRows.join("\n");
+    stream.end();
 }
 
 function main() {
     const data = JSON.parse(fs.readFileSync("history.json", "utf-8"));
-    const csv = jsonToCsv(data);
-    fs.writeFileSync("history.csv", csv);
+    jsonToCsv2(data, "history.csv");
 }
 
 main();
