@@ -10,6 +10,7 @@ import {
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
 import type { ValidationType } from "~/lib/validation";
+import { getBuiltComp } from "~/data";
 
 interface ValidationDialogProps {
     isOpen: boolean;
@@ -28,22 +29,27 @@ const ValidationDialog = ({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[80dvh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Validate QR Code</DialogTitle>
                     <DialogDescription>
                         A QR code has been scanned. Please validate its content.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
+                <div className="grid gap-4 py-4 overflow-auto">
                     <div className="flex flex-col items-start gap-2">
                         <span className="font-semibold">Scanned Data:</span>
                         <div className="contents">
                             {Object.entries(qrData).map(([key, value]) => (
-                                <p key={key} className="w-full rounded-md bg-gray-100 p-3 text-sm break-words text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                <p
+                                    key={key}
+                                    className="w-full rounded-md bg-gray-100 p-3 text-sm break-words text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                >
                                     {value}
                                 </p>
                             ))}
+
+                            {getBuiltComp(qrData)}
                         </div>
                     </div>
                 </div>
