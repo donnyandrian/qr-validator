@@ -8,7 +8,7 @@ import type { ValidationType } from "~/lib/validation";
 
 async function getBuiltComp(entry: ValidationType) {
     const detailed = await getDetailedValue(entry);
-    if (!detailed) throw new Error("Failed to get detailed value");
+    if (!detailed) return undefined;
 
     const built = Object.entries(detailed).map(([key, value]) => {
         if (key in builder) {
@@ -20,7 +20,7 @@ async function getBuiltComp(entry: ValidationType) {
 }
 
 export function BuiltComp({ entry }: { entry: ValidationType }) {
-    const [result, setResult] = useState<ReactNode>(undefined);
+    const [result, setResult] = useState<ReactNode[] | undefined>(undefined);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -38,13 +38,13 @@ export function BuiltComp({ entry }: { entry: ValidationType }) {
     }, [entry]);
 
     return (
-        <div className="contents">
+        <>
             {loading && (
                 <div className="flex items-center justify-center w-full mt-6">
                     <Loader2 className="size-6 animate-spin" />
                 </div>
             )}
             {result && <>{result}</>}
-        </div>
+        </>
     );
 }
