@@ -10,11 +10,7 @@ interface UserPayload {
 
 // --- Users to Encrypt ---
 // Add or modify users in this array and re-run the script to generate new tokens.
-const usersToEncrypt: UserPayload[] = [
-    { id: 1, name: "Super Admin", authorizeLevel: 2 },
-    { id: 2, name: "Standard Validator", authorizeLevel: 1 },
-    { id: 3, name: "Read-Only User", authorizeLevel: 0 },
-];
+const usersToEncrypt: UserPayload[] = [];
 // -------------------------
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
@@ -45,13 +41,25 @@ function encrypt(payload: UserPayload): string {
 console.log("--- Generated Encrypted User Tokens ---");
 console.log("Copy these tokens into your authorized-users.json file.\n");
 
+const forQr: { name: string; token: string }[] = [];
+
 const encryptedUsers = usersToEncrypt.map((user) => {
     const encryptedToken = encrypt(user);
     console.log(`User: ${user.name} (Level ${user.authorizeLevel})`);
     console.log(encryptedToken + "\n");
+
+    forQr.push({
+        name: user.name,
+        token: encryptedToken,
+    });
+
     return encryptedToken;
 });
 
 console.log("--- JSON Array for authorized-users.json ---");
 console.log(JSON.stringify(encryptedUsers, null, 2));
+console.log("\n--- End ---\n");
+
+console.log("--- QR Code Data ---");
+console.log(JSON.stringify(forQr, null, 2));
 console.log("\n--- End ---");
