@@ -19,6 +19,7 @@
       ENCRYPTION_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
       USERDATA_ENCRYPTION_KEY=PLEASE_ASK_THE_ADMIN_TO_GENERATE_THIS
       ```
+    - Add the user's data with the authorization level to `usersToEncrypt` in `.\helpers\encrypt-user.ts`.
     - To generate the authentication tokens, run: `bun run .\helpers\encrypt-user.ts`.
     - Copy the tokens from the console output to the `authorized-users.json` file.
     - If the `authorized-users.json` file doesn't exist, create it in the root directory. For example:
