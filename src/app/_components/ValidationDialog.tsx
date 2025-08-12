@@ -10,7 +10,7 @@ import {
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
 import type { ValidationType } from "~/lib/validation";
-import { getBuiltComp } from "~/data";
+import { BuiltComp } from "~/data/client";
 
 interface ValidationDialogProps {
     isOpen: boolean;
@@ -49,7 +49,7 @@ const ValidationDialog = ({
                                 </p>
                             ))}
 
-                            {getBuiltComp(qrData)}
+                            <BuiltComp entry={qrData} />
                         </div>
                     </div>
                 </div>
