@@ -1,13 +1,19 @@
 "use server";
 
 import type { ValidationType } from "~/lib/validation";
-import { data, key } from "./orkess4/server";
+import { data, datasetKey, inputKey } from "./orkess4/server";
 
-async function getDetailedValue(entry: ValidationType) {
-    const keyV = entry[key];
+export async function getDetailedValue(entry: ValidationType) {
+    const keyV = entry[inputKey];
 
     if (keyV in data) return data[keyV];
     return undefined;
 }
 
-export { getDetailedValue };
+export async function getInputKey() {
+    return inputKey;
+}
+
+export async function getDatasetKey() {
+    return datasetKey;
+}

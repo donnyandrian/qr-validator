@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import ScannerView from "./_components/ScannerView";
 import HistoryView, { type ScanEntry } from "./_components/HistoryView";
+import ReportView from "./_components/ReportView";
 import AuthView from "./_components/AuthView";
 import { Button } from "~/components/ui/button";
 import { LogOut, Loader2 } from "lucide-react";
@@ -94,9 +95,10 @@ export default function HomePage() {
 
     // If authenticated, show the main app
     const canScan = user.authorizeLevel >= 1;
+    const canReport = user.authorizeLevel >= 2;
     return (
-        <main className="flex min-h-screen h-dvh flex-col items-center justify-center bg-gray-100 p-4 sm:p-8 dark:bg-gray-900">
-            <div className="w-full max-w-4xl overflow-hidden flex flex-col h-full">
+        <main className="flex h-dvh min-h-screen flex-col items-center justify-center bg-gray-100 p-4 sm:p-8 dark:bg-gray-900">
+            <div className="flex h-full w-full max-w-4xl flex-col overflow-hidden">
                 <div className="mb-8 flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                         PreMark
@@ -121,24 +123,28 @@ export default function HomePage() {
 
                 <Tabs
                     defaultValue={canScan ? "scanner" : "history"}
-                    className="w-full h-full overflow-hidden"
+                    className="h-full w-full overflow-hidden"
                 >
-                    <TabsList
-                        className={`grid w-full ${canScan ? "grid-cols-2" : "grid-cols-1"}`}
-                    >
+                    <TabsList className="flex w-full *:flex-1">
                         {canScan && (
                             <TabsTrigger value="scanner">Scanner</TabsTrigger>
                         )}
                         <TabsTrigger value="history">History</TabsTrigger>
+                        {canReport && (
+                            <TabsTrigger value="report">Report</TabsTrigger>
+                        )}
                     </TabsList>
 
                     {canScan && (
-                        <TabsContent value="scanner" className="overflow-hidden flex flex-col">
-                            <Card className="overflow-hidden h-full">
+                        <TabsContent
+                            value="scanner"
+                            className="flex flex-col overflow-hidden"
+                        >
+                            <Card className="h-full overflow-hidden">
                                 <CardHeader>
                                     <CardTitle>Scan QR Code</CardTitle>
                                 </CardHeader>
-                                <CardContent className="overflow-hidden h-full flex flex-col justify-center *:-m-6 *:p-6 -mt-6 pt-6 -mb-14 pb-14">
+                                <CardContent className="-mt-6 -mb-14 flex h-full flex-col justify-center overflow-hidden pt-6 pb-14 *:-m-6 *:p-6">
                                     <ScannerView
                                         socket={socket}
                                         history={history}
@@ -149,12 +155,15 @@ export default function HomePage() {
                         </TabsContent>
                     )}
 
-                    <TabsContent value="history" className="overflow-hidden flex flex-col">
-                        <Card className="overflow-hidden h-full">
+                    <TabsContent
+                        value="history"
+                        className="flex flex-col overflow-hidden"
+                    >
+                        <Card className="h-full overflow-hidden">
                             <CardHeader>
                                 <CardTitle>Scan History</CardTitle>
                             </CardHeader>
-                            <CardContent className="overflow-hidden h-full flex flex-col *:-m-6 *:p-6 -my-6 py-6">
+                            <CardContent className="-my-6 flex h-full flex-col overflow-hidden py-6 *:-m-6 *:p-6">
                                 <HistoryView
                                     history={history}
                                     socket={socket}
@@ -163,6 +172,25 @@ export default function HomePage() {
                             </CardContent>
                         </Card>
                     </TabsContent>
+
+                    {canReport && (
+                        <TabsContent
+                            value="report"
+                            className="flex flex-col overflow-hidden"
+                        >
+                            <Card className="h-full overflow-hidden">
+                                <CardHeader>
+                                    <CardTitle>Scan History</CardTitle>
+                                </CardHeader>
+                                <CardContent className="-my-6 flex h-full flex-col overflow-hidden py-6 *:-m-6 *:p-6">
+                                    <ReportView
+                                        history={history}
+                                        socket={socket}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    )}
                 </Tabs>
             </div>
         </main>

@@ -2,7 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
-import { getDetailedValue } from "~/data";
+import { getDatasetKey, getDetailedValue, getInputKey } from "~/data";
 import { builder } from "~/data/orkess4/client";
 import type { ValidationType } from "~/lib/validation";
 
@@ -42,7 +42,7 @@ export function BuiltComp({ entry }: { entry: ValidationType }) {
     return (
         <>
             {loading && (
-                <div className="flex items-center justify-center w-full mt-6">
+                <div className="mt-6 flex w-full items-center justify-center">
                     <Loader2 className="size-6 animate-spin" />
                 </div>
             )}
@@ -50,3 +50,19 @@ export function BuiltComp({ entry }: { entry: ValidationType }) {
         </>
     );
 }
+
+export const useInputDataKey = () => {
+    const [key, setKey] = useState<keyof ValidationType | null>(null);
+    useEffect(() => {
+        getInputKey().then(setKey, () => setKey(null));
+    }, []);
+    return key;
+}
+
+export const useDatasetKey = () => {
+    const [key, setKey] = useState<string | null>(null);
+    useEffect(() => {
+        getDatasetKey().then(setKey, () => setKey(null));
+    }, []);
+    return key;
+};
