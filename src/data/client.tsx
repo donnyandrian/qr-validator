@@ -33,6 +33,8 @@ export function BuiltComp({ entry }: { entry: ValidationType }) {
             },
             (err) => {
                 if (err instanceof Error) console.error(err.message);
+
+                setLoading(false);
             },
         );
     }, [entry]);

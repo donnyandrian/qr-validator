@@ -17,7 +17,7 @@ const TextFormat = memo(function TextFormat({ value }: { value: string }) {
 
 const ImageFormat = memo(function ImageFormat({ value }: { value: string }) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={value} alt="Foto" className="w-full object-cover" />;
+    return <img src={value} alt="Foto" className="min-w-42 w-7/10 h-full min-h-64 object-contain" />;
 });
 
 export const builder: DataBuilderType = {

@@ -5,7 +5,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
     DialogFooter,
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
@@ -29,16 +28,12 @@ const ValidationDialog = ({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px] max-h-[80dvh] flex flex-col">
+            <DialogContent className="xs:max-w-[425px] xs:max-h-[80dvh] max-h-[100dvh] w-[100dvw] not-xs:max-w-[100dvw] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle>Validate QR Code</DialogTitle>
-                    <DialogDescription>
-                        A QR code has been scanned. Please validate its content.
-                    </DialogDescription>
+                    <DialogTitle>Validate Scanned Data</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4 overflow-auto">
-                    <div className="flex flex-col items-start gap-2">
-                        <span className="font-semibold">Scanned Data:</span>
+                <div className="flex flex-col gap-4 py-4 overflow-hidden flex-1">
+                    <div className="flex flex-col items-center gap-2 justify-start overflow-auto">
                         <div className="contents">
                             {Object.entries(qrData).map(([key, value]) => (
                                 <p
@@ -53,7 +48,7 @@ const ValidationDialog = ({
                         </div>
                     </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="flex-row justify-end">
                     <Button
                         variant="outline"
                         onClick={() => onSubmit("Not Valid")}
