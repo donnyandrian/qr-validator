@@ -1,6 +1,6 @@
 import fs from "fs";
 import * as csv from "fast-csv";
-import { ValidationType } from "~/lib/validation";
+import type { ValidationType } from "~/lib/validation";
 
 type History = {
     id: string;
@@ -20,7 +20,7 @@ const getKeys = () => {
         try {
             const parsed = JSON.parse(entry.data) as ValidationType;
             data.push(parsed.nim);
-        } catch (error) {
+        } catch {
             continue;
         }
     }
@@ -59,7 +59,9 @@ async function compareAndMarkRowsWithFastCsv(
         const formatter = csv
             .format({ headers: newHeaders })
             .transform((row, next) => {
-                const valueToCheck = row[columnToCompare as keyof typeof row];
+                const valueToCheck = row[
+                    columnToCompare as keyof typeof row
+                ] as string;
                 const availabilityStatus = availableSet.has(valueToCheck)
                     ? "Hadir"
                     : "Alpa";
