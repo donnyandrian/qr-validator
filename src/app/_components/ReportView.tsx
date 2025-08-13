@@ -159,15 +159,17 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
                                         ))}
                                         <TableCell>{validatorName}</TableCell>
                                         <TableCell className="text-center">
-                                            <Badge
-                                                variant={
-                                                    status === "Valid"
-                                                        ? "default"
-                                                        : "destructive"
-                                                }
-                                            >
-                                                {status}
-                                            </Badge>
+                                            {status && (
+                                                <Badge
+                                                    variant={
+                                                        status === "Valid"
+                                                            ? "default"
+                                                            : "destructive"
+                                                    }
+                                                >
+                                                    {status}
+                                                </Badge>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 ),
