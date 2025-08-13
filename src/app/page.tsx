@@ -48,11 +48,11 @@ export default function HomePage() {
                             console.log("Stored token is invalid. Clearing...");
                             localStorage.removeItem(AUTH_TOKEN_KEY);
                         }
-                        setIsLoading(false); 
+                        setIsLoading(false);
                     },
                 );
             } else {
-                setIsLoading(false); 
+                setIsLoading(false);
             }
         });
 
@@ -95,11 +95,11 @@ export default function HomePage() {
     // If authenticated, show the main app
     const canScan = user.authorizeLevel >= 1;
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4 sm:p-8 dark:bg-gray-900">
-            <div className="w-full max-w-4xl">
+        <main className="flex min-h-screen h-dvh flex-col items-center justify-center bg-gray-100 p-4 sm:p-8 dark:bg-gray-900">
+            <div className="w-full max-w-4xl overflow-hidden flex flex-col h-full">
                 <div className="mb-8 flex items-center justify-between">
-                    <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">
-                        QR Validator
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                        PreMark
                     </h1>
                     <div className="flex items-center gap-4">
                         <div className="text-right">
@@ -121,7 +121,7 @@ export default function HomePage() {
 
                 <Tabs
                     defaultValue={canScan ? "scanner" : "history"}
-                    className="w-full"
+                    className="w-full h-full overflow-hidden"
                 >
                     <TabsList
                         className={`grid w-full ${canScan ? "grid-cols-2" : "grid-cols-1"}`}
@@ -133,12 +133,12 @@ export default function HomePage() {
                     </TabsList>
 
                     {canScan && (
-                        <TabsContent value="scanner">
-                            <Card>
+                        <TabsContent value="scanner" className="overflow-hidden flex flex-col">
+                            <Card className="overflow-hidden h-full">
                                 <CardHeader>
                                     <CardTitle>Scan QR Code</CardTitle>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="overflow-hidden h-full flex flex-col justify-center *:-m-6 *:p-6 -mt-6 pt-6 -mb-14 pb-14">
                                     <ScannerView
                                         socket={socket}
                                         history={history}
@@ -149,12 +149,12 @@ export default function HomePage() {
                         </TabsContent>
                     )}
 
-                    <TabsContent value="history">
-                        <Card>
+                    <TabsContent value="history" className="overflow-hidden flex flex-col">
+                        <Card className="overflow-hidden h-full">
                             <CardHeader>
                                 <CardTitle>Scan History</CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="overflow-hidden h-full flex flex-col *:-m-6 *:p-6 -my-6 py-6">
                                 <HistoryView
                                     history={history}
                                     socket={socket}

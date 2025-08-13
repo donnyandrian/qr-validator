@@ -71,9 +71,9 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
     };
 
     return (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-y-4 overflow-hidden flex-1">
             <Input
-                placeholder="Search by QR data or validator name..."
+                placeholder="Search by data or validator name..."
                 value={searchTerm}
                 onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -82,16 +82,16 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
                 className="max-w-sm"
             />
 
-            <div className="max-h-[60vh] overflow-y-auto rounded-lg border">
+            <div className="rounded-lg border flex-1 overflow-hidden">
                 <Table>
                     <TableHeader className="sticky top-0 bg-gray-50 dark:bg-gray-800">
                         <TableRow>
-                            <TableHead>QR Data</TableHead>
+                            <TableHead>Data</TableHead>
                             <TableHead>Validator</TableHead>
                             <TableHead>Validated At</TableHead>
-                            <TableHead>Status</TableHead>
+                            <TableHead className="text-center">Status</TableHead>
                             {canDelete && (
-                                <TableHead className="text-right">
+                                <TableHead className="text-center">
                                     Actions
                                 </TableHead>
                             )}
@@ -110,7 +110,7 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
                                             scan.validatedAt,
                                         ).toLocaleString()}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="text-center">
                                         <Badge
                                             variant={
                                                 scan.status === "Valid"
@@ -122,7 +122,7 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
                                         </Badge>
                                     </TableCell>
                                     {canDelete && (
-                                        <TableCell className="text-right">
+                                        <TableCell className="text-center">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
@@ -154,7 +154,7 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
                 </Table>
             </div>
 
-            <div className="flex items-center justify-end space-x-2">
+            <div className="flex items-center justify-end gap-x-2">
                 <span className="text-muted-foreground text-sm">
                     Page {currentPage} of {totalPages}
                 </span>
