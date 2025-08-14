@@ -28,6 +28,13 @@ interface ReportViewProps {
     socket: Socket | null;
 }
 
+const finalPresent = (
+    initial: string | undefined,
+    status: string | undefined,
+) => {
+    return initial === "Yes" && status === "Valid" ? "Yes" : "No";
+};
+
 const ReportView = ({ history, socket }: ReportViewProps) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -73,19 +80,27 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
         });
     }, [history, dataset, inputDataKey, datasetKey]);
 
-    const filteredDataset = useMemo(() => {
-        if (!joinedDataset) return [];
-        if (!datasetKey) return joinedDataset;
-        if (!searchTerm) return joinedDataset;
+    const sortedDataset = useMemo(() => {
+        return joinedDataset.sort((a, b) =>
+            finalPresent(a.present, a.status).localeCompare(
+                finalPresent(b.present, b.status),
+            ),
+        );
+    }, [joinedDataset]);
 
-        return joinedDataset.filter((entry) => {
+    const filteredDataset = useMemo(() => {
+        if (!sortedDataset) return [];
+        if (!datasetKey) return sortedDataset;
+        if (!searchTerm) return sortedDataset;
+
+        return sortedDataset.filter((entry) => {
             if (datasetKey in entry === false) return false;
 
             return entry[datasetKey]
                 ?.toLowerCase()
                 .includes(searchTerm.toLowerCase());
         });
-    }, [joinedDataset, datasetKey, searchTerm]);
+    }, [sortedDataset, datasetKey, searchTerm]);
 
     const totalPages = Math.ceil(filteredDataset.length / itemsPerPage);
     const paginatedDataset = useMemo(() => {
@@ -167,7 +182,7 @@ const ReportViewRow = ({ scan }: ReportViewRowProps) => {
                             : "destructive"
                     }
                 >
-                    {present === "Yes" && status === "Valid" ? "Yes" : "No"}
+                    {finalPresent(present, status)}
                 </Badge>
             </TableCell>
             {Object.values(others).map((value, i) => (
