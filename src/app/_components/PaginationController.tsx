@@ -26,20 +26,22 @@ export const PaginationController = ({
             </span>
             <Button
                 variant="outline"
-                size="sm"
+                size="icon"
+                className="size-8"
                 onClick={goToPreviousPage}
                 disabled={currentPage === 1}
             >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft />
                 <span className="sr-only">Previous</span>
             </Button>
             <Button
                 variant="outline"
-                size="sm"
+                size="icon"
+                className="size-8"
                 onClick={goToNextPage}
                 disabled={currentPage === totalPages}
             >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight />
                 <span className="sr-only">Next</span>
             </Button>
         </div>
