@@ -42,6 +42,9 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
     const itemsPerPage = 10;
 
     const filteredHistory = useMemo(() => {
+        if (!history) return [];
+        if (!searchTerm) return history;
+
         return history.filter(
             (entry) =>
                 entry.data.toLowerCase().includes(searchTerm.toLowerCase()) ||

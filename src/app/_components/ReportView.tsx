@@ -76,6 +76,7 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
     const filteredDataset = useMemo(() => {
         if (!joinedDataset) return [];
         if (!datasetKey) return joinedDataset;
+        if (!searchTerm) return joinedDataset;
 
         return joinedDataset.filter((entry) => {
             if (datasetKey in entry === false) return false;
