@@ -51,6 +51,19 @@
 }
 
 :root {
+  @apply [--success:color-mix(in_oklab,_#EBF9EB_100%,_transparent)];
+  @apply [--success-foreground:color-mix(in_oklab,_#2d912d_100%,_transparent)];
+  @apply [--success-border:color-mix(in_oklab,_#ceefce_100%,_transparent)];
+  @apply [--error:theme(colors.red.50/100%)];
+  @apply [--error-foreground:theme(colors.red.500/100%)];
+  @apply [--error-border:theme(colors.red.100/100%)];
+  @apply [--warning:theme(colors.yellow.50/100%)];
+  @apply [--warning-foreground:theme(colors.yellow.500/100%)];
+  @apply [--warning-border:theme(colors.yellow.100/100%)];
+  --info: color-mix(in oklab, #f1f7fe 100%, transparent);
+  --info-foreground: color-mix(in oklab, #0f65af 100%, transparent);
+  --info-border: color-mix(in oklab, #e2effc 100%, transparent);
+
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
@@ -86,6 +99,19 @@
 }
 
 .dark {
+  @apply [--success:color-mix(in_oklab,_#1E452B_100%,_transparent)];
+  @apply [--success-foreground:color-mix(in_oklab,_#ceefce_100%,_transparent)];
+  @apply [--success-border:color-mix(in_oklab,_#1e611e_100%,_transparent)];
+  @apply [--error:color-mix(in_oklab,_#502029_100%,_transparent)];
+  @apply [--error-foreground:theme(colors.red.100/100%)];
+  @apply [--error-border:theme(colors.red.900/100%)];
+  @apply [--warning:color-mix(in_oklab,_#51351D_100%,_transparent)];
+  @apply [--warning-foreground:theme(colors.yellow.100/100%)];
+  @apply [--warning-border:theme(colors.yellow.800/100%)];
+  --info: color-mix(in oklab, #133e67 100%, transparent);
+  --info-foreground: color-mix(in oklab, #e2effc 100%, transparent);
+  --info-border: color-mix(in oklab, #10497c 100%, transparent);
+
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.208 0.042 265.755);

@@ -178,17 +178,7 @@ export default function HomePage() {
                             value="report"
                             className="flex flex-col overflow-hidden"
                         >
-                            <Card className="h-full overflow-hidden">
-                                <CardHeader>
-                                    <CardTitle>Scan History</CardTitle>
-                                </CardHeader>
-                                <CardContent className="-my-6 flex h-full flex-col overflow-hidden py-6 *:-m-6 *:p-6">
-                                    <ReportView
-                                        history={history}
-                                        socket={socket}
-                                    />
-                                </CardContent>
-                            </Card>
+                            <ReportView history={history} socket={socket} />
                         </TabsContent>
                     )}
                 </Tabs>
