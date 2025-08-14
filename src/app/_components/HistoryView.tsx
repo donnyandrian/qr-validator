@@ -12,8 +12,9 @@ import {
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import type { Socket } from "socket.io-client";
+import { PaginationController } from "./PaginationController";
 
 export interface ScanEntry {
     id: string;
@@ -56,22 +57,8 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
         return filteredHistory.slice(startIndex, startIndex + itemsPerPage);
     }, [filteredHistory, currentPage, itemsPerPage]);
 
-    const handleDelete = (id: string) => {
-        if (socket && canDelete) {
-            socket.emit("delete-entry", id);
-        }
-    };
-
-    const goToNextPage = () => {
-        setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-    };
-
-    const goToPreviousPage = () => {
-        setCurrentPage((prev) => Math.max(prev - 1, 1));
-    };
-
     return (
-        <div className="flex flex-col gap-y-4 overflow-hidden flex-1">
+        <div className="flex flex-1 flex-col gap-y-4 overflow-hidden">
             <Input
                 placeholder="Search by data or validator name..."
                 value={searchTerm}
@@ -82,14 +69,16 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
                 className="max-w-sm"
             />
 
-            <div className="rounded-lg border flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden rounded-lg border">
                 <Table>
                     <TableHeader className="sticky top-0 bg-gray-50 dark:bg-gray-800">
                         <TableRow>
                             <TableHead>Data</TableHead>
                             <TableHead>Validator</TableHead>
                             <TableHead>Validated At</TableHead>
-                            <TableHead className="text-center">Status</TableHead>
+                            <TableHead className="text-center">
+                                Status
+                            </TableHead>
                             {canDelete && (
                                 <TableHead className="text-center">
                                     Actions
@@ -100,45 +89,12 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
                     <TableBody>
                         {paginatedHistory.length > 0 ? (
                             paginatedHistory.map((scan) => (
-                                <TableRow key={scan.id}>
-                                    <TableCell className="max-w-[200px] truncate font-medium whitespace-pre-line sm:max-w-xs">
-                                        {prettyJsonData(scan.data)}
-                                    </TableCell>
-                                    <TableCell>{scan.validatorName}</TableCell>
-                                    <TableCell>
-                                        {new Date(
-                                            scan.validatedAt,
-                                        ).toLocaleString()}
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        <Badge
-                                            variant={
-                                                scan.status === "Valid"
-                                                    ? "default"
-                                                    : "destructive"
-                                            }
-                                        >
-                                            {scan.status}
-                                        </Badge>
-                                    </TableCell>
-                                    {canDelete && (
-                                        <TableCell className="text-center">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() =>
-                                                    handleDelete(scan.id)
-                                                }
-                                                aria-label="Delete entry"
-                                                disabled={scan.id.startsWith(
-                                                    "mock_",
-                                                )}
-                                            >
-                                                <Trash2 className="h-4 w-4 text-red-500" />
-                                            </Button>
-                                        </TableCell>
-                                    )}
-                                </TableRow>
+                                <HistoryViewRow
+                                    key={scan.id}
+                                    scan={scan}
+                                    socket={socket}
+                                    canDelete={canDelete}
+                                />
                             ))
                         ) : (
                             <TableRow>
@@ -154,30 +110,57 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
                 </Table>
             </div>
 
-            <div className="flex items-center justify-end gap-x-2">
-                <span className="text-muted-foreground text-sm">
-                    Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToPreviousPage}
-                    disabled={currentPage === 1}
-                >
-                    <ChevronLeft className="h-4 w-4" />
-                    <span className="sr-only">Previous</span>
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToNextPage}
-                    disabled={currentPage === totalPages}
-                >
-                    <ChevronRight className="h-4 w-4" />
-                    <span className="sr-only">Next</span>
-                </Button>
-            </div>
+            <PaginationController
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                totalPages={totalPages}
+            />
         </div>
+    );
+};
+
+interface HistoryViewRowProps {
+    scan: ScanEntry;
+    socket: Socket | null;
+    canDelete: boolean;
+}
+const HistoryViewRow = ({ scan, socket, canDelete }: HistoryViewRowProps) => {
+    const handleDelete = (id: string) => {
+        if (socket && canDelete) {
+            socket.emit("delete-entry", id);
+        }
+    };
+
+    return (
+        <TableRow>
+            <TableCell className="max-w-[200px] truncate font-medium whitespace-pre-line sm:max-w-xs">
+                {prettyJsonData(scan.data)}
+            </TableCell>
+            <TableCell>{scan.validatorName}</TableCell>
+            <TableCell>{new Date(scan.validatedAt).toLocaleString()}</TableCell>
+            <TableCell className="text-center">
+                <Badge
+                    variant={
+                        scan.status === "Valid" ? "default" : "destructive"
+                    }
+                >
+                    {scan.status}
+                </Badge>
+            </TableCell>
+            {canDelete && (
+                <TableCell className="text-center">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(scan.id)}
+                        aria-label="Delete entry"
+                        disabled={scan.id.startsWith("mock_")}
+                    >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                </TableCell>
+            )}
+        </TableRow>
     );
 };
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -10,13 +9,12 @@ import {
     TableHeader,
     TableRow,
 } from "~/components/ui/table";
-import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Socket } from "socket.io-client";
 import { useDatasetKey, useInputDataKey } from "~/data/client";
 import type { ValidationType } from "~/lib/validation";
 import { Badge } from "~/components/ui/badge";
+import { PaginationController } from "./PaginationController";
 
 export interface ScanEntry {
     id: string;
@@ -94,13 +92,7 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
         return filteredDataset.slice(startIndex, startIndex + itemsPerPage);
     }, [filteredDataset, currentPage, itemsPerPage]);
 
-    const goToNextPage = () => {
-        setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-    };
-
-    const goToPreviousPage = () => {
-        setCurrentPage((prev) => Math.max(prev - 1, 1));
-    };
+    const datasetKeys = useMemo(() => Object.keys(dataset[0] ?? {}), [dataset]);
 
     return (
         <div className="flex flex-1 flex-col gap-y-4 overflow-hidden">
@@ -121,7 +113,7 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
                             <TableHead className="text-center">
                                 Present
                             </TableHead>
-                            {Object.keys(dataset[0] ?? {}).map((key) => (
+                            {datasetKeys.map((key) => (
                                 <TableHead key={key}>{key}</TableHead>
                             ))}
                             <TableHead>Validator</TableHead>
@@ -132,48 +124,9 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
                     </TableHeader>
                     <TableBody>
                         {paginatedDataset.length > 0 ? (
-                            paginatedDataset.map(
-                                (
-                                    { present, validatorName, status, ...scan },
-                                    index,
-                                ) => (
-                                    <TableRow key={index}>
-                                        <TableCell className="text-center">
-                                            <Badge
-                                                variant={
-                                                    present === "Yes"
-                                                        ? "default"
-                                                        : "destructive"
-                                                }
-                                            >
-                                                {present || "No"}
-                                            </Badge>
-                                        </TableCell>
-                                        {Object.values(scan).map((value, i) => (
-                                            <TableCell
-                                                key={i}
-                                                className="max-w-[200px] truncate whitespace-pre-line sm:max-w-xs"
-                                            >
-                                                {value}
-                                            </TableCell>
-                                        ))}
-                                        <TableCell>{validatorName}</TableCell>
-                                        <TableCell className="text-center">
-                                            {status && (
-                                                <Badge
-                                                    variant={
-                                                        status === "Valid"
-                                                            ? "default"
-                                                            : "destructive"
-                                                    }
-                                                >
-                                                    {status}
-                                                </Badge>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                ),
-                            )
+                            paginatedDataset.map((scan, index) => (
+                                <ReportViewRow key={index} scan={scan} />
+                            ))
                         ) : (
                             <TableRow>
                                 <TableCell
@@ -188,30 +141,53 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
                 </Table>
             </div>
 
-            <div className="flex items-center justify-end gap-x-2">
-                <span className="text-muted-foreground text-sm">
-                    Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToPreviousPage}
-                    disabled={currentPage === 1}
-                >
-                    <ChevronLeft className="h-4 w-4" />
-                    <span className="sr-only">Previous</span>
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToNextPage}
-                    disabled={currentPage === totalPages}
-                >
-                    <ChevronRight className="h-4 w-4" />
-                    <span className="sr-only">Next</span>
-                </Button>
-            </div>
+            <PaginationController
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                totalPages={totalPages}
+            />
         </div>
+    );
+};
+
+interface ReportViewRowProps {
+    scan: Record<string, string>;
+}
+const ReportViewRow = ({ scan }: ReportViewRowProps) => {
+    const { present, status, validatorName, ...others } = scan;
+
+    return (
+        <TableRow>
+            <TableCell className="text-center">
+                <Badge
+                    variant={
+                        present === "Yes" && status === "Valid"
+                            ? "default"
+                            : "destructive"
+                    }
+                >
+                    {present === "Yes" && status === "Valid" ? "Yes" : "No"}
+                </Badge>
+            </TableCell>
+            {Object.values(others).map((value, i) => (
+                <TableCell
+                    key={i}
+                    className="max-w-[200px] truncate whitespace-pre-line sm:max-w-xs"
+                >
+                    {value}
+                </TableCell>
+            ))}
+            <TableCell>{validatorName}</TableCell>
+            <TableCell className="text-center">
+                {status && (
+                    <Badge
+                        variant={status === "Valid" ? "default" : "destructive"}
+                    >
+                        {status}
+                    </Badge>
+                )}
+            </TableCell>
+        </TableRow>
     );
 };
 
