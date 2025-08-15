@@ -40,6 +40,11 @@
 9. If you need CSV version of the history, run `bun run .\helpers\jsontocsv.ts`.
 10. if you need to quickly compare the history with a list from another source (e.g., a spreadsheet), run `bun run .\helpers\compare.ts`.
 
+> [!IMPORTANT]
+> You must adjust the `EVENT` data and validation rules before using the app.
+> - For the validation rules, edit the `./src/schemas/validations/${EVENT_NAME}.ts` file.
+> - For the data, edit the `client.tsx`, `server.ts`, `type.ts`, and `db.csv` files in `./src/data/${EVENT_NAME}`.
+
 > [!TIP]
 > You can duplicate the browser tab (e.g., one for scanning and one for history), and it will work as expected. Refresh the page if needed.
 
