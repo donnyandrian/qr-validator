@@ -4,7 +4,13 @@ import { writeToBuffer, type Row } from "@fast-csv/format";
 
 export async function generateCsv(rows: Row[], datasetKeys: string[]) {
     const csv = await writeToBuffer(rows, {
-        headers: ["Present", ...datasetKeys, "Validator", "Status"],
+        headers: [
+            "Present",
+            ...datasetKeys,
+            "Validator",
+            "Validated At",
+            "Status",
+        ],
     });
 
     return new Blob([Buffer.from(csv)], {

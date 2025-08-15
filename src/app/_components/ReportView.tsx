@@ -89,6 +89,7 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
                 present: "Yes",
                 ...entry,
                 validatorName: lookup.validatorName,
+                validatedAt: lookup.validatedAt,
                 status: lookup.status,
             };
         });
@@ -140,13 +141,18 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
                 "present",
                 ...datasetKeys,
                 "validatorName",
+                "validatedAt",
                 "status",
             ] as const;
             const rows = data.map((row) =>
                 headers.map((header) =>
                     header === "present"
                         ? finalPresent(row.present, row.status)
-                        : (row[header] ?? ""),
+                        : header === "validatedAt"
+                          ? row.validatedAt
+                              ? new Date(row.validatedAt).toLocaleString()
+                              : ""
+                          : (row[header] ?? ""),
                 ),
             );
             const blob = await generateCsv(rows, datasetKeys);
@@ -188,10 +194,17 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
             );
 
             const rows = data.map(
-                ({ present, validatorName = "", status = "", ...row }) => ({
+                ({
+                    present,
+                    validatorName = "",
+                    validatedAt = "",
+                    status = "",
+                    ...row
+                }) => ({
                     present: finalPresent(present, status),
                     ...row,
                     validatorName,
+                    validatedAt,
                     status,
                 }),
             );
@@ -308,6 +321,7 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
                                         <TableHead key={key}>{key}</TableHead>
                                     ))}
                                     <TableHead>Validator</TableHead>
+                                    <TableHead>Validated At</TableHead>
                                     <TableHead className="text-center">
                                         Status
                                     </TableHead>
@@ -350,7 +364,7 @@ interface ReportViewRowProps {
     scan: Record<string, string>;
 }
 const ReportViewRow = ({ scan }: ReportViewRowProps) => {
-    const { present, status, validatorName, ...others } = scan;
+    const { present, status, validatorName, validatedAt, ...others } = scan;
 
     return (
         <TableRow>
@@ -374,6 +388,9 @@ const ReportViewRow = ({ scan }: ReportViewRowProps) => {
                 </TableCell>
             ))}
             <TableCell>{validatorName}</TableCell>
+            {validatedAt && (
+                <TableCell>{new Date(validatedAt).toLocaleString()}</TableCell>
+            )}
             <TableCell className="text-center">
                 {status && (
                     <Badge
