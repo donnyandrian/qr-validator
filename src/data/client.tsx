@@ -2,7 +2,12 @@
 
 import { Loader2 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
-import { getDatasetKey, getDetailedValue, getInputKey } from "~/data";
+import {
+    type DatasetType,
+    getDatasetKey,
+    getDetailedValue,
+    getInputKey,
+} from "~/data";
 import { builder } from "~/data/orkess4/client";
 import type { ValidationType } from "~/lib/validation";
 
@@ -57,10 +62,10 @@ export const useInputDataKey = () => {
         getInputKey().then(setKey, () => setKey(null));
     }, []);
     return key;
-}
+};
 
 export const useDatasetKey = () => {
-    const [key, setKey] = useState<string | null>(null);
+    const [key, setKey] = useState<keyof DatasetType | null>(null);
     useEffect(() => {
         getDatasetKey().then(setKey, () => setKey(null));
     }, []);

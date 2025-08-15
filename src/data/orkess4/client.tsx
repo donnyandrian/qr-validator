@@ -15,13 +15,18 @@ const TextFormat = memo(function TextFormat({ value }: { value: string }) {
     );
 });
 
-const ImageFormat = memo(function ImageFormat({ value }: { value: string }) {
+/* const ImageFormat = memo(function ImageFormat({ value }: { value: string }) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={value} alt="Foto" className="min-w-42 w-7/10 h-full min-h-64 object-contain" />;
-});
+    return (
+        <img
+            src={value}
+            alt="Foto"
+            className="h-full min-h-64 w-7/10 min-w-42 object-contain"
+        />
+    );
+}); */
 
 export const builder: DataBuilderType = {
-    prodi: (value: string) => <TextFormat key={value} value={value} />,
-    asal: (value: string) => <TextFormat key={value} value={value} />,
-    foto: (value: string) => <ImageFormat key={value} value={value} />,
+    NIM: (value: string) => <TextFormat key={value} value={value} />,
+    Nama: (value: string) => <TextFormat key={value} value={value} />,
 };

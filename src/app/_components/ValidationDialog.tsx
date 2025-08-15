@@ -35,15 +35,6 @@ const ValidationDialog = ({
                 <div className="flex flex-col gap-4 py-4 overflow-hidden flex-1">
                     <div className="flex flex-col items-center gap-2 justify-start overflow-auto">
                         <div className="contents">
-                            {Object.entries(qrData).map(([key, value]) => (
-                                <p
-                                    key={key}
-                                    className="w-full rounded-md bg-gray-100 p-3 text-sm break-words text-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                                >
-                                    {value}
-                                </p>
-                            ))}
-
                             <BuiltComp entry={qrData} />
                         </div>
                     </div>

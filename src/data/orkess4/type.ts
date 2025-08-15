@@ -1,5 +1,4 @@
 export type DataType = {
-    prodi: string;
-    asal: string;
-    foto: string;
+    NIM: string;
+    Nama: string;
 };
