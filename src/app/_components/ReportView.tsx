@@ -12,7 +12,6 @@ import {
 import { Input } from "~/components/ui/input";
 import type { Socket } from "socket.io-client";
 import { useDatasetKey, useInputDataKey } from "~/data/client";
-import type { ValidationType } from "~/lib/validation";
 import { Badge } from "~/components/ui/badge";
 import { PaginationController } from "./PaginationController";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -79,8 +78,7 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
                 if (!datasetKey) return false;
                 if (datasetKey in entry === false) return false;
 
-                const parsed = JSON.parse(scan.data) as ValidationType;
-                return parsed[inputDataKey] === entry[datasetKey];
+                return scan.data === entry[datasetKey];
             });
 
             if (!lookup) return entry;

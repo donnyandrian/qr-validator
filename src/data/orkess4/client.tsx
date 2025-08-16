@@ -29,4 +29,8 @@ const TextFormat = memo(function TextFormat({ value }: { value: string }) {
 export const builder: DataBuilderType = {
     NIM: (value: string) => <TextFormat key={value} value={value} />,
     Nama: (value: string) => <TextFormat key={value} value={value} />,
+    "Program Studi": (value: string) => (
+        <TextFormat key={value} value={value} />
+    ),
+    Email: (value: string) => <TextFormat key={value} value={value} />,
 };

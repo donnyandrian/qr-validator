@@ -6,7 +6,7 @@ import type { DataType } from "~/data/orkess4/type";
 import { csvToJson } from "~/data/helper";
 
 export async function getDetailedValue(entry: ValidationType) {
-    const keyV = entry[inputKey];
+    const keyV = entry;
 
     const data = await csvToJson<DataType>(datasetPath, datasetKey);
 

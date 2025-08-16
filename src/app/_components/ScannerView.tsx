@@ -161,7 +161,7 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
     const handleValidationSubmit = (status: "Valid" | "Not Valid") => {
         if (socket && validationCandidate) {
             socket.emit("validation-submit", {
-                qrData: JSON.stringify(validationCandidate),
+                qrData: validationCandidate,
                 status,
                 validatorName: "Admin",
             });

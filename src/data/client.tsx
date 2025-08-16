@@ -57,7 +57,7 @@ export function BuiltComp({ entry }: { entry: ValidationType }) {
 }
 
 export const useInputDataKey = () => {
-    const [key, setKey] = useState<keyof ValidationType | null>(null);
+    const [key, setKey] = useState<string | null>(null);
     useEffect(() => {
         getInputKey().then(setKey, () => setKey(null));
     }, []);

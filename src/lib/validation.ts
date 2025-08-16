@@ -8,11 +8,8 @@ type ValidationResult<T> =
 
 export function validate(value: string): ValidationResult<ValidationType> {
     try {
-        // First, parse the JSON string into a JavaScript object.
-        const dataObject = JSON.parse(value) as Record<string, string>;
-
         // Use Zod's .parse() method. If validation fails, it throws an error.
-        const validatedData = validationSchema.parse(dataObject);
+        const validatedData = validationSchema.parse(value);
 
         // If validation is successful, return the typed data.
         return { success: true, value: validatedData };

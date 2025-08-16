@@ -15,6 +15,7 @@ import { Input } from "~/components/ui/input";
 import { Trash2 } from "lucide-react";
 import type { Socket } from "socket.io-client";
 import { PaginationController } from "./PaginationController";
+import { useInputDataKey } from "~/data/client";
 
 export interface ScanEntry {
     id: string;
@@ -37,6 +38,7 @@ interface HistoryViewProps {
 const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
     const canDelete = user.authorizeLevel >= 2;
 
+    const inputDataKey = useInputDataKey();
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
@@ -76,7 +78,7 @@ const HistoryView = ({ history, socket, user }: HistoryViewProps) => {
                 <Table>
                     <TableHeader className="sticky top-0 bg-gray-50 dark:bg-gray-800">
                         <TableRow>
-                            <TableHead>Data</TableHead>
+                            <TableHead>{inputDataKey}</TableHead>
                             <TableHead>Validator</TableHead>
                             <TableHead>Validated At</TableHead>
                             <TableHead className="text-center">
@@ -137,7 +139,7 @@ const HistoryViewRow = ({ scan, socket, canDelete }: HistoryViewRowProps) => {
     return (
         <TableRow>
             <TableCell className="max-w-[200px] truncate font-medium whitespace-pre-line sm:max-w-xs">
-                {prettyJsonData(scan.data)}
+                {scan.data}
             </TableCell>
             <TableCell>{scan.validatorName}</TableCell>
             <TableCell>{new Date(scan.validatedAt).toLocaleString()}</TableCell>
@@ -165,11 +167,6 @@ const HistoryViewRow = ({ scan, socket, canDelete }: HistoryViewRowProps) => {
             )}
         </TableRow>
     );
-};
-
-const prettyJsonData = (json: string) => {
-    const entries = Object.entries(JSON.parse(json) as Record<string, string>);
-    return entries.map(([key, value]) => `${key}: ${value}`).join("\n");
 };
 
 export default HistoryView;
