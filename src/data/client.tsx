@@ -8,7 +8,7 @@ import {
     getDetailedValue,
     getInputKey,
 } from "~/data";
-import { builder } from "~/data/orkess4/client";
+import { builder, tableCellBuilder } from "~/data/orkess4/client";
 import type { ValidationType } from "~/lib/validation";
 
 async function getBuiltComp(entry: ValidationType) {
@@ -71,3 +71,5 @@ export const useDatasetKey = () => {
     }, []);
     return key;
 };
+
+export { tableCellBuilder };

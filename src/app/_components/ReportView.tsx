@@ -11,7 +11,11 @@ import {
 } from "~/components/ui/table";
 import { Input } from "~/components/ui/input";
 import type { Socket } from "socket.io-client";
-import { useDatasetKey, useInputDataKey } from "~/data/client";
+import {
+    useDatasetKey,
+    useInputDataKey,
+    tableCellBuilder,
+} from "~/data/client";
 import { Badge } from "~/components/ui/badge";
 import { PaginationController } from "./PaginationController";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -377,13 +381,8 @@ const ReportViewRow = ({ scan }: ReportViewRowProps) => {
                     {finalPresent(present, status)}
                 </Badge>
             </TableCell>
-            {Object.values(others).map((value, i) => (
-                <TableCell
-                    key={i}
-                    className="max-w-[200px] truncate whitespace-pre-line sm:max-w-xs"
-                >
-                    {value}
-                </TableCell>
+            {Object.entries(others).map(([k, v], i) => (
+                <TableCellComp key={i} cellK={k} cellV={v} />
             ))}
             <TableCell>{validatorName}</TableCell>
             {validatedAt && (
@@ -400,6 +399,12 @@ const ReportViewRow = ({ scan }: ReportViewRowProps) => {
             </TableCell>
         </TableRow>
     );
+};
+
+const TableCellComp = ({ cellK, cellV }: { cellK: string; cellV: string }) => {
+    if (cellK in tableCellBuilder) {
+        return tableCellBuilder[cellK as keyof typeof tableCellBuilder](cellV);
+    }
 };
 
 export default ReportView;

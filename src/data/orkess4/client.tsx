@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, type ReactNode } from "react";
+import { TableCell } from "~/components/ui/table";
 import type { DataType } from "~/data/orkess4/type";
 
 type DataBuilderType<T = DataType> = {
@@ -33,4 +34,27 @@ export const builder: DataBuilderType = {
         <TextFormat key={value} value={value} />
     ),
     Email: (value: string) => <TextFormat key={value} value={value} />,
+};
+
+export const tableCellBuilder: DataBuilderType = {
+    NIM: (value: string) => (
+        <TableCell key={value} className="max-w-[200px] whitespace-pre-line sm:max-w-xs">
+            {value}
+        </TableCell>
+    ),
+    Nama: (value: string) => (
+        <TableCell key={value} className="max-w-[200px] truncate sm:max-w-xs">
+            {value}
+        </TableCell>
+    ),
+    "Program Studi": (value: string) => (
+        <TableCell key={value} className="max-w-[120px] truncate">
+            {value}
+        </TableCell>
+    ),
+    Email: (value: string) => (
+        <TableCell key={value} className="max-w-[120px] truncate">
+            {value}
+        </TableCell>
+    ),
 };
