@@ -237,6 +237,7 @@ app.prepare().then(() => {
                 return;
             }
 
+            console.log("Loading dataset (server)...");
             csvToJson("./src/data/orkess4/db.csv").then(
                 (data) => {
                     dataset = data;
