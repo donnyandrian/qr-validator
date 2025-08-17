@@ -7,6 +7,7 @@ import "./src/env.js";
 /** @type {import("next").NextConfig} */
 const config = {
     serverExternalPackages: ["@napi-rs/canvas"],
+    allowedDevOrigins: ["*"],
 };
 
 export default config;
