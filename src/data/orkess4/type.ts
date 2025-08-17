@@ -1,6 +1,6 @@
 export type DataType = {
     NIM: string;
     Nama: string;
-    "Program Studi": string;
+    Prodi: string;
     Email: string;
 };

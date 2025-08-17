@@ -30,7 +30,7 @@ const TextFormat = memo(function TextFormat({ value }: { value: string }) {
 export const builder: DataBuilderType = {
     NIM: (value: string) => <TextFormat key={value} value={value} />,
     Nama: (value: string) => <TextFormat key={value} value={value} />,
-    "Program Studi": (value: string) => (
+    Prodi: (value: string) => (
         <TextFormat key={value} value={value} />
     ),
     Email: (value: string) => <TextFormat key={value} value={value} />,
@@ -47,7 +47,7 @@ export const tableCellBuilder: DataBuilderType = {
             {value}
         </TableCell>
     ),
-    "Program Studi": (value: string) => (
+    Prodi: (value: string) => (
         <TableCell key={value} className="max-w-[120px] truncate">
             {value}
         </TableCell>
