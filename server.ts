@@ -232,6 +232,11 @@ app.prepare().then(() => {
         });
 
         socket.on("init-dataset", (callback) => {
+            if (dataset.length > 0) {
+                callback(dataset);
+                return;
+            }
+
             csvToJson("./src/data/orkess4/db.csv").then(
                 (data) => {
                     dataset = data;
