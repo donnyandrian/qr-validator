@@ -1,6 +1,5 @@
 import fs from "fs";
 import * as csv from "fast-csv";
-import type { ValidationType } from "~/lib/validation";
 
 type History = {
     id: string;
@@ -18,8 +17,7 @@ const getKeys = () => {
     const data: string[] = [];
     for (const entry of history) {
         try {
-            const parsed = JSON.parse(entry.data) as ValidationType;
-            data.push(parsed.nim);
+            data.push(entry.data);
         } catch {
             continue;
         }
