@@ -4,3 +4,9 @@ export type DataType = {
     Prodi: string;
     Email: string;
 };
+export const dataTypeKeys: (keyof DataType)[] = [
+    "NIM",
+    "Nama",
+    "Prodi",
+    "Email",
+];

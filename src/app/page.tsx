@@ -178,7 +178,7 @@ export default function HomePage() {
                             value="report"
                             className="flex flex-col overflow-hidden"
                         >
-                            <ReportView history={history} socket={socket} />
+                            <ReportView history={history} />
                         </TabsContent>
                     )}
                 </Tabs>

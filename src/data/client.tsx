@@ -4,11 +4,13 @@ import { Loader2 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import {
     type DatasetType,
+    getDataset,
     getDatasetKey,
     getDetailedValue,
     getInputKey,
 } from "~/data";
 import { builder, tableCellBuilder } from "~/data/orkess4/client";
+import { dataTypeKeys } from "~/data/orkess4/type";
 import type { ValidationType } from "~/lib/validation";
 
 async function getBuiltComp(entry: ValidationType) {
@@ -72,4 +74,12 @@ export const useDatasetKey = () => {
     return key;
 };
 
-export { tableCellBuilder };
+export const useDataset = () => {
+    const [dataset, setDataset] = useState<Record<string, DatasetType> | null>(null);
+    useEffect(() => {
+        getDataset().then(setDataset, () => setDataset(null));
+    }, []);
+    return dataset;
+};
+
+export { tableCellBuilder, dataTypeKeys };

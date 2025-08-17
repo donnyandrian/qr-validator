@@ -8,7 +8,6 @@ import path from "path";
 import crypto from "crypto";
 import "dotenv/config";
 import { validate } from "~/lib/validation";
-import { parse as fastParse } from "@fast-csv/parse";
 
 // --- Server Setup ---
 const dev = process.env.NODE_ENV !== "production";
@@ -25,7 +24,6 @@ interface QrScan {
     validatedAt: string;
     status: "Valid" | "Not Valid";
 }
-type Row = Record<string, string>;
 interface User {
     id: number;
     name: string;
@@ -55,30 +53,7 @@ const writeHistoryToFile = (history: QrScan[]) => {
     }
 };
 
-const csvToJson = (path: string): Promise<Row[]> => {
-    return new Promise((resolve, reject: (error: Error) => void) => {
-        const input = fs.createReadStream(path);
-        const parser = fastParse({ headers: true });
-
-        const result: Row[] = [];
-
-        parser
-            .on("error", () => {
-                reject(new Error("Error parsing CSV"));
-            })
-            .on("data", (data: Row) => {
-                result.push(data);
-            })
-            .on("end", () => {
-                resolve(result);
-            });
-
-        input.pipe(parser);
-    });
-};
-
 let scanHistory: QrScan[] = readHistoryFromFile();
-let dataset: Record<string, string>[] = [];
 
 // --- Authentication ---
 const authorizedUsersPath = path.join(process.cwd(), "authorized-users.json");
@@ -229,22 +204,6 @@ app.prepare().then(() => {
                 writeHistoryToFile(scanHistory);
                 io.emit("history-update", scanHistory);
             }
-        });
-
-        socket.on("init-dataset", (callback) => {
-            if (dataset.length > 0) {
-                callback(dataset);
-                return;
-            }
-
-            console.log("Loading dataset (server)...");
-            csvToJson("./src/data/orkess4/db.csv").then(
-                (data) => {
-                    dataset = data;
-                    callback(dataset);
-                },
-                (err: Error) => callback(err),
-            );
         });
 
         socket.on("disconnect", () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
     Table,
     TableBody,
@@ -10,12 +10,14 @@ import {
     TableRow,
 } from "~/components/ui/table";
 import { Input } from "~/components/ui/input";
-import type { Socket } from "socket.io-client";
 import {
     useDatasetKey,
     useInputDataKey,
     tableCellBuilder,
+    useDataset,
+    dataTypeKeys as datasetKeys,
 } from "~/data/client";
+import type { DatasetType } from "~/data";
 import { Badge } from "~/components/ui/badge";
 import { PaginationController } from "./PaginationController";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -42,7 +44,12 @@ export interface ScanEntry {
 }
 interface ReportViewProps {
     history: ScanEntry[];
-    socket: Socket | null;
+}
+type JoinedDatasetType = DatasetType & {
+    present?: "Yes" | "No";
+    validatorName?: string;
+    validatedAt?: string;
+    status?: "Valid" | "Not Valid";
 }
 
 const finalPresent = (
@@ -52,50 +59,35 @@ const finalPresent = (
     return initial === "Yes" && status === "Valid" ? "Yes" : "No";
 };
 
-const ReportView = ({ history, socket }: ReportViewProps) => {
+const ReportView = ({ history }: ReportViewProps) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [dataset, setDataset] = useState<Record<string, string>[]>([]);
+    //const [dataset, setDataset] = useState<Record<string, string>[]>([]);
+    const dataset = useDataset();
     const inputDataKey = useInputDataKey();
     const datasetKey = useDatasetKey();
     const itemsPerPage = 10;
 
-    useEffect(() => {
-        if (!socket) return;
-
-        socket.emit(
-            "init-dataset",
-            (response: Record<string, string>[] | Error) => {
-                if (Array.isArray(response)) {
-                    setDataset(response);
-                } else {
-                    console.error("Error fetching dataset: ", response);
-                }
-            },
-        );
-    }, [socket]);
-
     const joinedDataset = useMemo(() => {
-        return dataset.map((entry) => {
+        if (!dataset) return [];
+
+        return Object.entries(dataset).map(([key, value]): JoinedDatasetType => {
             const lookup = history.find((scan) => {
                 if (!inputDataKey) return false;
-                if (!datasetKey) return false;
-                if (datasetKey in entry === false) return false;
-
-                return scan.data === entry[datasetKey];
+                return scan.data === key;
             });
 
-            if (!lookup) return entry;
+            if (!lookup) return value;
 
             return {
                 present: "Yes",
-                ...entry,
+                ...value,
                 validatorName: lookup.validatorName,
                 validatedAt: lookup.validatedAt,
                 status: lookup.status,
             };
-        });
-    }, [history, dataset, inputDataKey, datasetKey]);
+        })
+    }, [history, dataset, inputDataKey]);
 
     const sortedDataset = useMemo(() => {
         return [...joinedDataset].sort((a, b) =>
@@ -124,8 +116,6 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         return filteredDataset.slice(startIndex, startIndex + itemsPerPage);
     }, [filteredDataset, currentPage, itemsPerPage]);
-
-    const datasetKeys = useMemo(() => Object.keys(dataset[0] ?? {}), [dataset]);
 
     const exportCsv = useCallback(
         (sorted: boolean) => async () => {
@@ -180,7 +170,7 @@ const ReportView = ({ history, socket }: ReportViewProps) => {
                 `${sorted ? "Sorted" : "Unsorted"} CSV exported successfully.`,
             );
         },
-        [sortedDataset, joinedDataset, datasetKeys],
+        [sortedDataset, joinedDataset],
     );
 
     const exportJson = useCallback(

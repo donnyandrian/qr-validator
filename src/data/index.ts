@@ -3,19 +3,22 @@
 import type { ValidationType } from "~/lib/validation";
 import { datasetPath, datasetKey, inputKey } from "./orkess4/server";
 import type { DataType } from "~/data/orkess4/type";
-import { csvToJson } from "~/data/helper";
+import { createSingletonAsyncLoader, csvToJson } from "~/data/helper";
 
-let cachedDataset: Record<string, DataType> = {};
+const _getSingletonData = createSingletonAsyncLoader(() =>
+    csvToJson<DataType>(datasetPath, datasetKey),
+);
+
+export async function getDataset() {
+    return _getSingletonData();
+}
 
 export async function getDetailedValue(entry: ValidationType) {
     const keyV = entry;
 
-    if (Object.keys(cachedDataset).length === 0) {
-        console.log("Loading dataset (detailed value)...");
-        cachedDataset = await csvToJson<DataType>(datasetPath, datasetKey);
-    }
+    const data = await getDataset();
 
-    if (keyV in cachedDataset) return cachedDataset[keyV];
+    if (keyV in data) return data[keyV];
     return undefined;
 }
 
