@@ -100,9 +100,12 @@ export default function HomePage() {
         <main className="flex h-dvh min-h-screen flex-col items-center justify-center bg-gray-100 p-4 sm:p-8 dark:bg-gray-900">
             <div className="flex h-full w-full max-w-4xl flex-col overflow-hidden">
                 <div className="mb-8 flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                        PreMark
-                    </h1>
+                    <div className="flex flex-col">
+                        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                            PreMark
+                        </h1>
+                        <p className="text-sm text-gray-500">ORKESS 4.0</p>
+                    </div>
                     <div className="flex items-center gap-4">
                         <div className="text-right">
                             <p className="font-semibold">{user.name}</p>
