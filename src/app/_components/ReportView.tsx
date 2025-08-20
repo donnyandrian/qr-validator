@@ -12,7 +12,6 @@ import {
 import { Input } from "~/components/ui/input";
 import {
     useDatasetKey,
-    useInputDataKey,
     tableCellBuilder,
     useDataset,
     dataTypeKeys as datasetKeys,
@@ -50,7 +49,7 @@ type JoinedDatasetType = DatasetType & {
     validatorName?: string;
     validatedAt?: string;
     status?: "Valid" | "Not Valid";
-}
+};
 
 const finalPresent = (
     initial: string | undefined,
@@ -62,32 +61,38 @@ const finalPresent = (
 const ReportView = ({ history }: ReportViewProps) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    //const [dataset, setDataset] = useState<Record<string, string>[]>([]);
     const dataset = useDataset();
-    const inputDataKey = useInputDataKey();
     const datasetKey = useDatasetKey();
     const itemsPerPage = 10;
 
     const joinedDataset = useMemo(() => {
         if (!dataset) return [];
 
-        return Object.entries(dataset).map(([key, value]): JoinedDatasetType => {
-            const lookup = history.find((scan) => {
-                if (!inputDataKey) return false;
-                return scan.data === key;
-            });
+        return Object.entries(dataset).map(
+            ([key, value]): JoinedDatasetType => {
+                let lookup: ScanEntry | null = null;
+                for (const scan of history) {
+                    if (scan.data === key) {
+                        if (!(lookup === null || scan.status === "Valid")) continue;
 
-            if (!lookup) return value;
+                        lookup = scan;
+                        if (scan.status === "Valid") {
+                            break;
+                        }
+                    }
+                }
+                if (!lookup) return value;
 
-            return {
-                present: "Yes",
-                ...value,
-                validatorName: lookup.validatorName,
-                validatedAt: lookup.validatedAt,
-                status: lookup.status,
-            };
-        })
-    }, [history, dataset, inputDataKey]);
+                return {
+                    present: "Yes",
+                    ...value,
+                    validatorName: lookup.validatorName,
+                    validatedAt: lookup.validatedAt,
+                    status: lookup.status,
+                };
+            },
+        );
+    }, [history, dataset]);
 
     const sortedDataset = useMemo(() => {
         return [...joinedDataset].sort((a, b) =>

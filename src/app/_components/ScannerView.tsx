@@ -10,6 +10,7 @@ import { type ScanEntry } from "./HistoryView";
 import { Badge } from "~/components/ui/badge";
 import type { User } from "~/types";
 import type { ValidationType } from "~/lib/validation";
+import { toast } from "sonner";
 
 interface ScannerViewProps {
     socket: Socket | null;
@@ -74,7 +75,7 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
                     }
 
                     const isDuplicate = historyRef.current.some(
-                        (entry) => entry.data === result,
+                        (entry) => (entry.data === result && entry.status === "Valid"),
                     );
                     if (isDuplicate) {
                         setLastMessage(`Skipped: Already in history.`);
@@ -164,6 +165,14 @@ const ScannerView = ({ socket, history, user }: ScannerViewProps) => {
                 qrData: validationCandidate,
                 status,
                 validatorName: "Admin",
+            }, ({ message, type }: { message: string; type: string }) => {
+                if (type === "error") {
+                    toast.error(message);
+                } else if (type === "success") {
+                    toast.success(message);
+                } else if (type === "info") {
+                    toast.info(message);
+                }
             });
         }
         setValidationCandidate(null);

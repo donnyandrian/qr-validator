@@ -161,20 +161,38 @@ app.prepare().then(() => {
 
         socket.on(
             "validation-submit",
-            (data: { qrData: string; status: "Valid" | "Not Valid" }) => {
+            (
+                data: { qrData: string; status: "Valid" | "Not Valid" },
+                callback,
+            ) => {
                 const user: User | undefined = socket.data.user;
                 if (!user || user.authorizeLevel < 1) {
-                    console.log(
-                        `🚫 Unauthorized validation attempt by user:`,
-                        user,
-                    );
+                    callback({
+                        message: `Unauthorized validation attempt by user: ${user?.name}`,
+                        type: "error",
+                    });
                     return;
                 }
 
-                const isDuplicate = scanHistory.some(
-                    (entry) => entry.data === data.qrData,
-                );
-                if (isDuplicate) return;
+                let duplicatedValidator = "";
+                const isDuplicate = scanHistory.some((entry) => {
+                    if (
+                        entry.data === data.qrData &&
+                        entry.status === "Valid"
+                    ) {
+                        duplicatedValidator = entry.validatorName;
+                        return true;
+                    }
+
+                    return false;
+                });
+                if (isDuplicate) {
+                    callback({
+                        message: `This entry data (${data.qrData}) has already been validated by ${duplicatedValidator}`,
+                        type: "info",
+                    });
+                    return;
+                }
 
                 const newScan: QrScan = {
                     id: `scan_${Date.now()}`,
@@ -185,6 +203,10 @@ app.prepare().then(() => {
                 };
                 scanHistory.unshift(newScan);
                 writeHistoryToFile(scanHistory);
+                callback({
+                    message: `Validation for ${data.qrData} has been submitted`,
+                    type: "success",
+                });
                 io.emit("history-update", scanHistory);
             },
         );
